@@ -28,6 +28,12 @@ public:
 	Context context() const;
 	int copyFromCPU(const void* data, size_t size);
 	int copyToCPU(void* data, size_t size) const;
+	virtual NDArray operator+(const NDArray& other) const;
+	virtual NDArray operator-(const NDArray& other) const;
+	virtual NDArray operator*(const NDArray& other) const;
+	virtual NDArray operator/(const NDArray& other) const;
+	virtual NDArray power(const NDArray& other) const;
+	virtual NDArray operator%(const NDArray& other) const;
 private:
 	shared_ptr<tvm::runtime::NDArray> array;
 	Shape _shape;
