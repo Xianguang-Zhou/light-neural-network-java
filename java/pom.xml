@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.zxg.ai</groupId>
+	<artifactId>light-neural-network</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<url>https://github.com/Xianguang-Zhou/light_neural_network/tree/master/java</url>
+
+	<licenses>
+		<license>
+			<name>Mozilla Public License Version 2.0</name>
+			<url>http://mozilla.org/MPL/2.0/</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Xianguang Zhou</name>
+			<email>xianguang.zhou@outlook.com</email>
+		</developer>
+	</developers>
+
+	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.aparapi</groupId>
+			<artifactId>aparapi</artifactId>
+			<version>1.10.0</version>
+		</dependency>
+	</dependencies>
+</project>
