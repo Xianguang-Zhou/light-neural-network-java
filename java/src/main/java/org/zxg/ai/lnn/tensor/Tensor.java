@@ -12,11 +12,20 @@ import java.util.Arrays;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class Tensor {
+public class Tensor implements Cloneable {
 
 	float[] data;
 	int[] shape;
 	int[] dimSizes;
+
+	public Tensor(Tensor other) {
+		data = new float[other.data.length];
+		System.arraycopy(other.data, 0, data, 0, data.length);
+		shape = new int[other.shape.length];
+		System.arraycopy(other.shape, 0, shape, 0, shape.length);
+		dimSizes = new int[other.dimSizes.length];
+		System.arraycopy(other.dimSizes, 0, dimSizes, 0, dimSizes.length);
+	}
 
 	public Tensor(int... shape) {
 		this.shape = shape;
@@ -94,6 +103,41 @@ public class Tensor {
 		checkSameDim(shape, other.shape);
 	}
 
+	private final int dataIndex(int... indexes) {
+		if (indexes.length != shape.length) {
+			throw new DimException();
+		}
+		int i = 0;
+		int dsi = 0;
+		for (int index : indexes) {
+			if (0 <= index && index < shape[dsi]) {
+				i += (index * dimSizes[dsi++]);
+			} else {
+				throw new IndexOutOfBoundsException();
+			}
+		}
+		return i;
+	}
+
+	public final float get(int... indexes) {
+		return data[dataIndex(indexes)];
+	}
+
+	public final void set(float value, int... indexes) {
+		data[dataIndex(indexes)] = value;
+	}
+
+	public final void reshape(int... shape) {
+		ShapeInfo info = ShapeInfo.create(shape);
+		if (info.size != data.length) {
+			float[] data = new float[info.size];
+			System.arraycopy(this.data, 0, data, 0, this.data.length > info.size ? info.size : this.data.length);
+			this.data = data;
+		}
+		this.shape = shape;
+		this.dimSizes = info.dimSizes;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -119,14 +163,8 @@ public class Tensor {
 	}
 
 	@Override
-	public String toString() {
-		StringBuilder b = new StringBuilder();
-		if (shape.length == 0) {
-			b.append(data[0]);
-		} else {
-			appendDim(b, 0, 0);
-		}
-		return b.toString();
+	public Tensor clone() {
+		return new Tensor(this);
 	}
 
 	protected final void appendDim(final StringBuilder b, final int shapeIndex, final int dataIndex) {
@@ -155,5 +193,16 @@ public class Tensor {
 			}
 		}
 		b.append(']');
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		if (shape.length == 0) {
+			b.append(data[0]);
+		} else {
+			appendDim(b, 0, 0);
+		}
+		return b.toString();
 	}
 }
