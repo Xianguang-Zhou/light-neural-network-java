@@ -26,6 +26,11 @@ class ArangeKernel extends Kernel {
 		this.result = result;
 	}
 
+	void execute() {
+		execute(result.length);
+		dispose();
+	}
+
 	@Override
 	public void run() {
 		int i = getGlobalId();

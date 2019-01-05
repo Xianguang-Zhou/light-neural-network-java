@@ -22,6 +22,11 @@ class DivideKernel extends Kernel {
 		this.result = result;
 	}
 
+	void execute() {
+		execute(left.length);
+		dispose();
+	}
+
 	@Override
 	public void run() {
 		int i = getGlobalId();

@@ -139,7 +139,7 @@ public class Tensor implements Cloneable {
 	}
 
 	public final void constant(float constant) {
-		new ConstantKernel(constant, data).execute(data.length);
+		new ConstantKernel(constant, data).execute();
 	}
 
 	public final void constant(double constant) {
@@ -167,34 +167,34 @@ public class Tensor implements Cloneable {
 	}
 
 	public final void arange(float start, float stop, float step, int repeat) {
-		new ArangeKernel(start, stop, step, repeat, data).execute(data.length);
+		new ArangeKernel(start, stop, step, repeat, data).execute();
 	}
 
 	public final Tensor add(Tensor other) {
 		checkSameShape(other);
 		Tensor result = new Tensor(shape);
-		new AddKernel(data, other.data, result.data).execute(data.length);
+		new AddKernel(data, other.data, result.data).execute();
 		return result;
 	}
 
 	public final Tensor sub(Tensor other) {
 		checkSameShape(other);
 		Tensor result = new Tensor(shape);
-		new SubtractKernel(data, other.data, result.data).execute(data.length);
+		new SubtractKernel(data, other.data, result.data).execute();
 		return result;
 	}
 
 	public final Tensor mul(Tensor other) {
 		checkSameShape(other);
 		Tensor result = new Tensor(shape);
-		new MultiplyKernel(data, other.data, result.data).execute(data.length);
+		new MultiplyKernel(data, other.data, result.data).execute();
 		return result;
 	}
 
 	public final Tensor div(Tensor other) {
 		checkSameShape(other);
 		Tensor result = new Tensor(shape);
-		new DivideKernel(data, other.data, result.data).execute(data.length);
+		new DivideKernel(data, other.data, result.data).execute();
 		return result;
 	}
 
