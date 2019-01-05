@@ -138,6 +138,38 @@ public class Tensor implements Cloneable {
 		this.dimSizes = info.dimSizes;
 	}
 
+	public final void constant(float constant) {
+		new ConstantKernel(constant, data).execute(data.length);
+	}
+
+	public final void constant(double constant) {
+		constant((float) constant);
+	}
+
+	public final void ones() {
+		constant(1);
+	}
+
+	public final void zeros() {
+		constant(0);
+	}
+
+	public final void arange(float stop) {
+		arange(0, stop);
+	}
+
+	public final void arange(float start, float stop) {
+		arange(start, stop, 1);
+	}
+
+	public final void arange(float start, float stop, float step) {
+		arange(start, stop, step, 1);
+	}
+
+	public final void arange(float start, float stop, float step, int repeat) {
+		new ArangeKernel(start, stop, step, repeat, data).execute(data.length);
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
