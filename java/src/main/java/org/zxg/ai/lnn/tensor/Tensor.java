@@ -170,6 +170,34 @@ public class Tensor implements Cloneable {
 		new ArangeKernel(start, stop, step, repeat, data).execute(data.length);
 	}
 
+	public final Tensor add(Tensor other) {
+		checkSameShape(other);
+		Tensor result = new Tensor(shape);
+		new AddKernel(data, other.data, result.data).execute(data.length);
+		return result;
+	}
+
+	public final Tensor sub(Tensor other) {
+		checkSameShape(other);
+		Tensor result = new Tensor(shape);
+		new SubtractKernel(data, other.data, result.data).execute(data.length);
+		return result;
+	}
+
+	public final Tensor mul(Tensor other) {
+		checkSameShape(other);
+		Tensor result = new Tensor(shape);
+		new MultiplyKernel(data, other.data, result.data).execute(data.length);
+		return result;
+	}
+
+	public final Tensor div(Tensor other) {
+		checkSameShape(other);
+		Tensor result = new Tensor(shape);
+		new DivideKernel(data, other.data, result.data).execute(data.length);
+		return result;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
