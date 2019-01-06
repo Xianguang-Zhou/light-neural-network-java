@@ -198,6 +198,38 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
+	public final Tensor dot(Tensor other) {
+		checkSameDim(other);
+		if (this.shape.length == 0) {
+			return new Tensor(new float[] { this.data[0] * other.data[0] }, new int[0]);
+		} else {
+			if (this.shape[this.shape.length - 1] != other.shape[0]) {
+				throw new ShapeException();
+			}
+			if (this.shape.length == 1) {
+				float[] resultData = new float[this.data.length];
+				new MultiplyKernel(this.data, other.data, resultData).execute();
+				float resultValue = 0;
+				for (float value : resultData) {
+					resultValue += value;
+				}
+				return new Tensor(new float[] { resultValue }, new int[0]);
+			} else if (this.shape.length == 2) {
+				int[] resultShape = new int[] { this.shape[0], other.shape[1] };
+				Tensor result = new Tensor(resultShape);
+				new MatrixProductKernel(this, other, result).execute();
+				return result;
+			} else {
+				int[] resultShape = new int[this.shape.length + other.shape.length - 2];
+				System.arraycopy(this.shape, 0, resultShape, 0, this.shape.length - 1);
+				System.arraycopy(other.shape, 1, resultShape, this.shape.length - 1, other.shape.length - 1);
+				Tensor result = new Tensor(resultShape);
+				new ProductKernel(this, other, result).execute();
+				return result;
+			}
+		}
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
