@@ -49,17 +49,20 @@ class ProductKernel extends Kernel {
 
 			int resultDataIndex = gid0;
 			int resultDimSizesIndex = 0;
+			int resultDimSize = 0;
 			int leftDataIndex = gid1;
-			for (int i = 0; i < halfOfResultNdim_$constant$[0]; i++) {
-				leftDataIndex += ((resultDataIndex / resultDimSizes_$constant$[resultDimSizesIndex])
-						* leftDimSizes_$constant$[i]);
-				resultDataIndex %= resultDimSizes_$constant$[resultDimSizesIndex++];
+			int dimSizesIndexLimit = halfOfResultNdim_$constant$[0];
+			for (int i = 0; i < dimSizesIndexLimit;) {
+				resultDimSize = resultDimSizes_$constant$[resultDimSizesIndex++];
+				leftDataIndex += ((resultDataIndex / resultDimSize) * leftDimSizes_$constant$[i++]);
+				resultDataIndex %= resultDimSize;
 			}
 			int rightDataIndex = gid1 * rightDimSizes_$constant$[0];
-			for (int i = 1; i < halfOfResultNdim_$constant$[0] + 1; i++) {
-				rightDataIndex += ((resultDataIndex / resultDimSizes_$constant$[resultDimSizesIndex])
-						* rightDimSizes_$constant$[i]);
-				resultDataIndex %= resultDimSizes_$constant$[resultDimSizesIndex++];
+			dimSizesIndexLimit++;
+			for (int i = 1; i < dimSizesIndexLimit;) {
+				resultDimSize = resultDimSizes_$constant$[resultDimSizesIndex++];
+				rightDataIndex += ((resultDataIndex / resultDimSize) * rightDimSizes_$constant$[i++]);
+				resultDataIndex %= resultDimSize;
 			}
 
 			cacheData[gid0][gid1] = leftData_$constant$[leftDataIndex] * rightData_$constant$[rightDataIndex];
@@ -67,9 +70,12 @@ class ProductKernel extends Kernel {
 			int gid1 = getGlobalId(1);
 			if (gid1 == 0) {
 				int gid0 = getGlobalId(0);
-				for (int i = 0; i < cacheDataShape_$constant$[1]; i++) {
-					resultData[gid0] += cacheData[gid0][i];
+				float resultValue = 0;
+				int cacheDataShape1 = cacheDataShape_$constant$[1];
+				for (int i = 0; i < cacheDataShape1;) {
+					resultValue += cacheData[gid0][i++];
 				}
+				resultData[gid0] = resultValue;
 			}
 		}
 	}

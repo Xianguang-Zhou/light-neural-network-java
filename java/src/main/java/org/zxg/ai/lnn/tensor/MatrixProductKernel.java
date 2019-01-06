@@ -45,8 +45,9 @@ class MatrixProductKernel extends Kernel {
 			int gid0 = getGlobalId(0);
 			int gid1 = getGlobalId(1);
 
-			int resultIndex0 = gid0 / resultDimSizes_$constant$[0];
-			int resultIndex1 = gid0 % resultDimSizes_$constant$[0];
+			int resultDimSize0 = resultDimSizes_$constant$[0];
+			int resultIndex0 = gid0 / resultDimSize0;
+			int resultIndex1 = gid0 % resultDimSize0;
 			int leftDataIndex = resultIndex0 * leftDimSizes_$constant$[0] + gid1;
 			int rightDataIndex = gid1 * rightDimSizes_$constant$[0] + resultIndex1;
 
@@ -55,9 +56,12 @@ class MatrixProductKernel extends Kernel {
 			int gid1 = getGlobalId(1);
 			if (gid1 == 0) {
 				int gid0 = getGlobalId(0);
-				for (int i = 0; i < cacheDataShape_$constant$[1]; i++) {
-					resultData[gid0] += cacheData[gid0][i];
+				float resultValue = 0;
+				int cacheDataShape1 = cacheDataShape_$constant$[1];
+				for (int i = 0; i < cacheDataShape1;) {
+					resultValue += cacheData[gid0][i++];
 				}
+				resultData[gid0] = resultValue;
 			}
 		}
 	}
