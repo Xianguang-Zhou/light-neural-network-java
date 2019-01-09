@@ -12,14 +12,17 @@ import com.aparapi.Kernel;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-class JavaRandomKernel extends Kernel {
+class UniformRandomKernel extends Kernel {
 
 	@Constant
 	long[] seed_$constant$;
+	@Constant
+	float[] interval_$constant$;
 	float[] result;
 
-	JavaRandomKernel(long seed, float[] result) {
+	UniformRandomKernel(long seed, float low, float high, float[] result) {
 		this.seed_$constant$ = new long[] { seed };
+		this.interval_$constant$ = new float[] { low, high - low };
 		this.result = result;
 	}
 
@@ -30,10 +33,12 @@ class JavaRandomKernel extends Kernel {
 
 	@Override
 	public void run() {
-		int gid0 = getGlobalId();
+		final int gid0 = getGlobalId();
 		long seed = seed_$constant$[0] * (gid0 + 1);
+		seed = (seed ^ 0x5DEECE66DL) & ((1L << 48) - 1);
 		seed = (seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
-		int next = (int) (seed >>> 24);
-		result[gid0] = next / ((float) (1 << 24));
+		final int next24 = (int) (seed >>> 24);
+		final float nextFloat = next24 / ((float) (1 << 24));
+		result[gid0] = nextFloat * interval_$constant$[1] + interval_$constant$[0];
 	}
 }

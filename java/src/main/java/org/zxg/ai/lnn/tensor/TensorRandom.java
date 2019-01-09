@@ -10,15 +10,15 @@ package org.zxg.ai.lnn.tensor;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class JavaRandom {
+public class TensorRandom {
 
 	private long seed;
 
-	public JavaRandom() {
+	public TensorRandom() {
 		this(0);
 	}
 
-	public JavaRandom(long seed) {
+	public TensorRandom(long seed) {
 		seed(seed);
 	}
 
@@ -26,8 +26,25 @@ public class JavaRandom {
 		this.seed = (seed ^ 0x5DEECE66DL) & ((1L << 48) - 1);
 	}
 
-	public final void next(Tensor t) {
-		new JavaRandomKernel(seed, t.data).execute();
+	protected final void nextSeed() {
 		seed = (seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
+	}
+
+	public final void uniform(Tensor t) {
+		uniform(0, 1, t);
+	}
+
+	public final void uniform(float low, float high, Tensor t) {
+		new UniformRandomKernel(seed, low, high, t.data).execute();
+		nextSeed();
+	}
+
+	public final void normal(Tensor t) {
+		normal(0, 1, t);
+	}
+
+	public final void normal(float mean, float standardDeviation, Tensor t) {
+		new NormalRandomKernel(seed, mean, standardDeviation, t.data).execute();
+		nextSeed();
 	}
 }
