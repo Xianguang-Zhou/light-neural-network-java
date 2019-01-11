@@ -230,6 +230,38 @@ public class Tensor implements Cloneable {
 		}
 	}
 
+	public final Tensor sqrt() {
+		Tensor result = new Tensor(shape);
+		new SquareRootKernel(data, result.data).execute();
+		return result;
+	}
+
+	public final Tensor exp() {
+		Tensor result = new Tensor(shape);
+		new NaturalExponentiationKernel(data, result.data).execute();
+		return result;
+	}
+
+	public final Tensor pow(Tensor exponent) {
+		checkSameShape(exponent);
+		Tensor result = new Tensor(shape);
+		new PowerKernel(data, exponent.data, result.data).execute();
+		return result;
+	}
+
+	public final Tensor ln() {
+		Tensor result = new Tensor(shape);
+		new NaturalLogarithmKernel(data, result.data).execute();
+		return result;
+	}
+
+	public final Tensor log(Tensor antilogarithm) {
+		checkSameShape(antilogarithm);
+		Tensor result = new Tensor(shape);
+		new LogarithmKernel(data, antilogarithm.data, result.data).execute();
+		return result;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
