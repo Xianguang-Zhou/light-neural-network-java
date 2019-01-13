@@ -14,11 +14,19 @@ import java.util.Arrays;
  */
 public class Tensor implements Cloneable {
 
+	private static float DEFAULT_PRECISION = 0.00001f;
+
+	public static void defaultPrecision(float precision) {
+		DEFAULT_PRECISION = Math.abs(precision);
+	}
+
+	float precision;
 	float[] data;
 	int[] shape;
 	int[] dimSizes;
 
 	public Tensor(Tensor other) {
+		precision = other.precision;
 		data = new float[other.data.length];
 		System.arraycopy(other.data, 0, data, 0, data.length);
 		shape = new int[other.shape.length];
@@ -28,6 +36,7 @@ public class Tensor implements Cloneable {
 	}
 
 	public Tensor(int... shape) {
+		precision = DEFAULT_PRECISION;
 		this.shape = shape;
 		ShapeInfo info = ShapeInfo.create(shape);
 		this.dimSizes = info.dimSizes;
@@ -35,6 +44,7 @@ public class Tensor implements Cloneable {
 	}
 
 	public Tensor(float[] data, int... shape) {
+		precision = DEFAULT_PRECISION;
 		this.shape = shape;
 		ShapeInfo info = ShapeInfo.create(shape);
 		if (info.size != data.length) {
@@ -42,6 +52,14 @@ public class Tensor implements Cloneable {
 		}
 		this.dimSizes = info.dimSizes;
 		this.data = data;
+	}
+
+	public final float precision() {
+		return precision;
+	}
+
+	public final void precision(float precision) {
+		this.precision = Math.abs(precision);
 	}
 
 	public final float[] flatData() {
@@ -262,6 +280,28 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
+	protected float selectPrecision(float otherPrecision) {
+		return precision < otherPrecision ? precision : otherPrecision;
+	}
+
+	public final boolean lessThan(Tensor other) {
+		checkSameShape(other);
+		return new LessKernel(selectPrecision(other.precision), this.data, other.data).execute();
+	}
+
+	public final boolean lessThanOrEquals(Tensor other) {
+		checkSameShape(other);
+		return new LessEqualKernel(selectPrecision(other.precision), this.data, other.data).execute();
+	}
+
+	public final boolean moreThan(Tensor other) {
+		return other.lessThan(this);
+	}
+
+	public final boolean moreThanOrEquals(Tensor other) {
+		return other.lessThanOrEquals(this);
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -274,7 +314,10 @@ public class Tensor implements Cloneable {
 			return false;
 		}
 		Tensor other = (Tensor) obj;
-		return Arrays.equals(shape, other.shape) && Arrays.equals(data, other.data);
+		if (!Arrays.equals(shape, other.shape)) {
+			return false;
+		}
+		return new EqualKernel(selectPrecision(other.precision), this.data, other.data).execute();
 	}
 
 	@Override
