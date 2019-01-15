@@ -145,6 +145,30 @@ public class Tensor implements Cloneable {
 		data[dataIndex(indexes)] = value;
 	}
 
+	public final Tensor slice(int begin, int end) {
+		return slice(0, begin, end);
+	}
+
+	public final Tensor slice(int axis, int begin, int end) {
+		if (axis < 0 || axis >= this.shape.length) {
+			throw new IndexOutOfBoundsException();
+		}
+		if (begin < 0 || begin >= end || end > this.shape[axis]) {
+			throw new IndexOutOfBoundsException();
+		}
+		int[] shape = new int[this.shape.length];
+		for (int i = 0; i < shape.length; i++) {
+			if (i != axis) {
+				shape[i] = this.shape[i];
+			} else {
+				shape[i] = end - begin;
+			}
+		}
+		Tensor result = new Tensor(shape);
+		new SliceKernel(axis, begin, this, result).execute();
+		return result;
+	}
+
 	public final void reshape(int... shape) {
 		ShapeInfo info = ShapeInfo.create(shape);
 		if (info.size != data.length) {
@@ -154,6 +178,46 @@ public class Tensor implements Cloneable {
 		}
 		this.shape = shape;
 		this.dimSizes = info.dimSizes;
+	}
+
+	public final Tensor transpose() {
+		return transpose(null);
+	}
+
+	public final Tensor transpose(int... permutation) {
+		if (this.shape.length < 2) {
+			return clone();
+		} else {
+			if (null == permutation) {
+				permutation = new int[this.shape.length];
+				for (int i = 0, value = permutation.length - 1; i < permutation.length; i++) {
+					permutation[i] = value--;
+				}
+			} else {
+				if (permutation.length != this.shape.length) {
+					throw new DimException();
+				}
+				int[] permutationCheckResults = new int[this.shape.length];
+				for (int value : permutation) {
+					if (value < 0 || value >= permutationCheckResults.length) {
+						throw new IndexOutOfBoundsException();
+					}
+					permutationCheckResults[value]++;
+				}
+				for (int value : permutationCheckResults) {
+					if (value != 1) {
+						throw new ShapeException();
+					}
+				}
+			}
+			int[] shape = new int[this.shape.length];
+			for (int i = 0; i < shape.length; i++) {
+				shape[i] = this.shape[permutation[i]];
+			}
+			Tensor result = new Tensor(shape);
+			new TransposeKernel(permutation, this, result).execute();
+			return result;
+		}
 	}
 
 	public final void constant(float constant) {
