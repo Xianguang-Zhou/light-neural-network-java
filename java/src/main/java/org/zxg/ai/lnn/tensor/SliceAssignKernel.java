@@ -12,13 +12,13 @@ import com.aparapi.Kernel;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-class SliceKernel extends Kernel {
+class SliceAssignKernel extends Kernel {
 
 	@Constant
 	int[] begin_$constant$, sourceDimSizes_$constant$, resultDimSizes_$constant$, ndim_$constant$;
 	float[] source, result;
 
-	SliceKernel(int[] begin, Tensor source, Tensor result) {
+	SliceAssignKernel(int[] begin, Tensor source, Tensor result) {
 		this.begin_$constant$ = begin;
 		this.source = source.data;
 		this.result = result.data;
@@ -28,7 +28,7 @@ class SliceKernel extends Kernel {
 	}
 
 	void execute() {
-		execute(result.length);
+		execute(source.length);
 		dispose();
 	}
 
@@ -36,12 +36,12 @@ class SliceKernel extends Kernel {
 	public void run() {
 		final int gid = getGlobalId();
 		final int ndim = ndim_$constant$[0];
-		int sourceIndex = 0;
-		for (int resultIndex = gid, dimSizesIndex = 0; dimSizesIndex < ndim; dimSizesIndex++) {
-			sourceIndex += (((resultIndex / resultDimSizes_$constant$[dimSizesIndex]) + begin_$constant$[dimSizesIndex])
-					* sourceDimSizes_$constant$[dimSizesIndex]);
-			resultIndex %= resultDimSizes_$constant$[dimSizesIndex];
+		int resultIndex = 0;
+		for (int sourceIndex = gid, dimSizesIndex = 0; dimSizesIndex < ndim; dimSizesIndex++) {
+			resultIndex += (((sourceIndex / sourceDimSizes_$constant$[dimSizesIndex]) + begin_$constant$[dimSizesIndex])
+					* resultDimSizes_$constant$[dimSizesIndex]);
+			sourceIndex %= sourceDimSizes_$constant$[dimSizesIndex];
 		}
-		result[gid] = source[sourceIndex];
+		result[resultIndex] = source[gid];
 	}
 }

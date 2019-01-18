@@ -165,8 +165,39 @@ public class Tensor implements Cloneable {
 			}
 		}
 		Tensor result = new Tensor(shape);
-		new SliceKernel(axis, begin, this, result).execute();
+		new AxisSliceKernel(axis, begin, this, result).execute();
 		return result;
+	}
+
+	public final Tensor slice(int[] begin, int[] end) {
+		if (begin.length != this.shape.length || end.length != this.shape.length) {
+			throw new DimException();
+		}
+		int[] shape = new int[this.shape.length];
+		for (int i = 0; i < this.shape.length; i++) {
+			int elementOfBegin = begin[i];
+			int elementOfEnd = end[i];
+			if (elementOfBegin < 0 || elementOfBegin >= elementOfEnd || elementOfEnd > this.shape[i]) {
+				throw new IndexOutOfBoundsException();
+			}
+			shape[i] = elementOfEnd - elementOfBegin;
+		}
+		Tensor result = new Tensor(shape);
+		new SliceKernel(begin, this, result).execute();
+		return result;
+	}
+
+	public final void sliceAssign(int[] begin, Tensor value) {
+		if (begin.length != this.shape.length || !sameDim(value)) {
+			throw new DimException();
+		}
+		for (int i = 0; i < this.shape.length; i++) {
+			int elementOfBegin = begin[i];
+			if (elementOfBegin < 0 || elementOfBegin + value.shape[i] > this.shape[i]) {
+				throw new IndexOutOfBoundsException();
+			}
+		}
+		new SliceAssignKernel(begin, value, this).execute();
 	}
 
 	public final void reshape(int... shape) {
