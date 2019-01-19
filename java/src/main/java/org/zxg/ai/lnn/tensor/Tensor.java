@@ -251,6 +251,19 @@ public class Tensor implements Cloneable {
 		}
 	}
 
+	public final Tensor broadcastTo(int... shape) {
+		checkSameDim(this.shape, shape);
+		for (int i = 0; i < this.shape.length; i++) {
+			int length = this.shape[i];
+			if (length != shape[i] && length != 1) {
+				throw new ShapeException();
+			}
+		}
+		Tensor result = new Tensor(shape);
+		new BroadcastKernel(this, result).execute();
+		return result;
+	}
+
 	public final void constant(float constant) {
 		new ConstantKernel(constant, data).execute();
 	}
@@ -281,6 +294,18 @@ public class Tensor implements Cloneable {
 
 	public final void arange(float start, float stop, float step, int repeat) {
 		new ArangeKernel(start, stop, step, repeat, data).execute();
+	}
+
+	public final Tensor negative() {
+		Tensor result = new Tensor(shape);
+		new NegativeKernel(data, result.data).execute();
+		return result;
+	}
+
+	public final Tensor abs() {
+		Tensor result = new Tensor(shape);
+		new AbsKernel(data, result.data).execute();
+		return result;
 	}
 
 	public final Tensor add(Tensor other) {
