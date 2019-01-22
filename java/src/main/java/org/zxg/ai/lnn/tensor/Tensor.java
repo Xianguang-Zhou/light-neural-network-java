@@ -85,6 +85,10 @@ public class Tensor implements Cloneable {
 		return shape.length;
 	}
 
+	protected final int[] dimSizes() {
+		return dimSizes;
+	}
+
 	protected static final boolean sameShape(int[] shape1, int[] shape2) {
 		return Arrays.equals(shape1, shape2);
 	}

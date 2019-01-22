@@ -22,6 +22,10 @@ public class TensorRandom {
 		seed(seed);
 	}
 
+	protected final long seed() {
+		return seed;
+	}
+
 	public final void seed(long seed) {
 		this.seed = (seed ^ 0x5DEECE66DL) & ((1L << 48) - 1);
 	}

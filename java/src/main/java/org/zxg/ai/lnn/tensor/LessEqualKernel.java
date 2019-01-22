@@ -12,7 +12,7 @@ import com.aparapi.Kernel;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class LessEqualKernel extends Kernel {
+class LessEqualKernel extends Kernel {
 
 	@Constant
 	float[] precision_$constant$;

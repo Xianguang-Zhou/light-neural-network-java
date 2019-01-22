@@ -12,7 +12,7 @@ import com.aparapi.Kernel;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class LessKernel extends Kernel {
+class LessKernel extends Kernel {
 
 	@Constant
 	float[] precision_$constant$;
