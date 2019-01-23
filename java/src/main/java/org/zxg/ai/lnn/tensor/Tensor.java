@@ -340,6 +340,12 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
+	public final Tensor reciprocal() {
+		Tensor result = new Tensor(shape);
+		new ReciprocalKernel(data, result.data).execute();
+		return result;
+	}
+
 	public final Tensor dot(Tensor other) {
 		checkSameDim(other);
 		if (this.shape.length == 0) {
