@@ -189,6 +189,105 @@ public class Variable {
 		});
 	}
 
+	public final Variable sqrt() {
+		Tensor resultArgument = argument.sqrt();
+		return new Variable(resultArgument, new Computation(this, record.isRecording()) {
+
+			@Override
+			protected Tensor gradient() {
+				Tensor two = new Tensor(resultArgument.shape());
+				two.constant(2);
+				return resultArgument.mul(two).reciprocal();
+			}
+		});
+	}
+
+	public final Variable exp() {
+		Tensor resultArgument = argument.exp();
+		return new Variable(resultArgument, new Computation(this, record.isRecording()) {
+
+			@Override
+			protected Tensor gradient() {
+				return resultArgument;
+			}
+		});
+	}
+
+	public final Variable pow(Tensor exponent) {
+		return new Variable(argument.pow(exponent), new Computation(this, record.isRecording()) {
+
+			@Override
+			protected Tensor gradient() {
+				Tensor one = new Tensor(exponent.shape());
+				one.ones();
+				return Variable.this.argument.pow(exponent.sub(one)).mul(exponent);
+			}
+		});
+	}
+
+	public final Variable pow(Variable exponent) {
+		boolean isRecorded = record.isRecording();
+		Tensor resultArgument = this.argument.pow(exponent.argument);
+		return new Variable(resultArgument, new Computation(this, isRecorded) {
+
+			@Override
+			protected Tensor gradient() {
+				Tensor one = new Tensor(exponent.argument.shape());
+				one.ones();
+				return Variable.this.argument.pow(exponent.argument.sub(one)).mul(exponent.argument);
+			}
+		}, new Computation(exponent, isRecorded) {
+
+			@Override
+			protected Tensor gradient() {
+				return Variable.this.argument.ln().mul(resultArgument);
+			}
+		});
+	}
+
+	public final Variable ln() {
+		return new Variable(argument.ln(), new Computation(this, record.isRecording()) {
+
+			@Override
+			protected Tensor gradient() {
+				return Variable.this.argument.reciprocal();
+			}
+		});
+	}
+
+	public final Variable log(Tensor antilogarithm) {
+		return new Variable(argument.log(antilogarithm), new Computation(this, record.isRecording()) {
+
+			@Override
+			protected Tensor gradient() {
+				Tensor two = new Tensor(Variable.this.argument.shape());
+				two.constant(2);
+				return Variable.this.argument.ln().pow(two).reciprocal().negative()
+						.mul(Variable.this.argument.reciprocal()).mul(antilogarithm.ln());
+			}
+		});
+	}
+
+	public final Variable log(Variable antilogarithm) {
+		boolean isRecorded = record.isRecording();
+		return new Variable(this.argument.log(antilogarithm.argument), new Computation(this, isRecorded) {
+
+			@Override
+			protected Tensor gradient() {
+				Tensor two = new Tensor(Variable.this.argument.shape());
+				two.constant(2);
+				return Variable.this.argument.ln().pow(two).reciprocal().negative()
+						.mul(Variable.this.argument.reciprocal()).mul(antilogarithm.argument.ln());
+			}
+		}, new Computation(antilogarithm, isRecorded) {
+
+			@Override
+			protected Tensor gradient() {
+				return Variable.this.argument.ln().mul(antilogarithm.argument).reciprocal();
+			}
+		});
+	}
+
 	public final Record record() {
 		return record;
 	}
