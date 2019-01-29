@@ -204,7 +204,7 @@ public class Tensor implements Cloneable {
 		new SliceAssignKernel(begin, value, this).execute();
 	}
 
-	public final void reshape(int... shape) {
+	public final void setShape(int... shape) {
 		ShapeInfo info = ShapeInfo.create(shape);
 		if (info.size != data.length) {
 			float[] data = new float[info.size];
@@ -213,6 +213,12 @@ public class Tensor implements Cloneable {
 		}
 		this.shape = shape;
 		this.dimSizes = info.dimSizes;
+	}
+
+	public final Tensor reshape(int... shape) {
+		Tensor c = clone();
+		c.setShape(shape);
+		return c;
 	}
 
 	public final Tensor transpose() {

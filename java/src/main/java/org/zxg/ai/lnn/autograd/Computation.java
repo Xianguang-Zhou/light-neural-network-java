@@ -15,12 +15,16 @@ import org.zxg.ai.lnn.tensor.Tensor;
 public abstract class Computation {
 
 	protected final Variable creator;
-	final boolean isRecorded;
 
-	public Computation(Variable creator, boolean isRecorded) {
+	public Computation(Variable creator) {
 		this.creator = creator;
-		this.isRecorded = isRecorded;
 	}
 
-	protected abstract Tensor gradient();
+	protected Tensor gradient() {
+		return null;
+	}
+
+	protected Tensor backward(Tensor forwardGradient) {
+		return gradient().mul(forwardGradient);
+	}
 }
