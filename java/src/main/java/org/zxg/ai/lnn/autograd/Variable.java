@@ -7,6 +7,9 @@
  */
 package org.zxg.ai.lnn.autograd;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.zxg.ai.lnn.tensor.Tensor;
 
 /**
@@ -16,16 +19,36 @@ public class Variable {
 
 	private Tensor value;
 	private Tensor gradient;
-	private Computation[] computations;
+	private List<Computation> computations;
+	private boolean requiresGradient;
 
 	public Variable(Tensor value) {
+		this(value, true);
+	}
+
+	public Variable(Tensor value, boolean requiresGradient) {
 		this.value = value;
-		this.gradient = new Tensor(value.shape());
+		this.requiresGradient = requiresGradient;
+		if (requiresGradient) {
+			this.gradient = new Tensor(value.shape());
+		}
 	}
 
 	protected Variable(Tensor value, Computation... computations) {
 		this.value = value;
-		this.computations = computations;
+		this.requiresGradient = false;
+		if (computations != null) {
+			List<Computation> computaionList = new LinkedList<>();
+			for (Computation c : computations) {
+				if (c.creator.requiresGradient) {
+					computaionList.add(c);
+				}
+			}
+			if (!computaionList.isEmpty()) {
+				this.requiresGradient = true;
+				this.computations = computaionList;
+			}
+		}
 	}
 
 	private final void backwardInternal(Tensor gradient) {
@@ -33,7 +56,7 @@ public class Variable {
 			for (Computation c : this.computations) {
 				c.creator.backwardInternal(c.backward(gradient));
 			}
-		} else {
+		} else if (this.gradient != null) {
 			this.gradient = this.gradient.add(gradient);
 		}
 	}
@@ -291,5 +314,9 @@ public class Variable {
 
 	public final Tensor gradient() {
 		return gradient;
+	}
+
+	public final boolean requiresGradient() {
+		return requiresGradient;
 	}
 }
