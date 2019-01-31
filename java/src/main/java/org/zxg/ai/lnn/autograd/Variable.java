@@ -149,7 +149,8 @@ public class Variable {
 	}
 
 	public final Variable div(Variable other) {
-		return new Variable(this.value.div(other.value), new Computation(this) {
+		Tensor resultValue = this.value.div(other.value);
+		return new Variable(resultValue, new Computation(this) {
 
 			@Override
 			protected Tensor gradient() {
@@ -159,17 +160,18 @@ public class Variable {
 
 			@Override
 			protected Tensor gradient() {
-				return other.value.mul(other.value).reciprocal().negative().mul(Variable.this.value);
+				return resultValue.div(other.value).negative();
 			}
 		});
 	}
 
 	public final Variable reciprocal() {
-		return new Variable(value.reciprocal(), new Computation(this) {
+		Tensor resultValue = value.reciprocal();
+		return new Variable(resultValue, new Computation(this) {
 
 			@Override
 			protected Tensor gradient() {
-				return Variable.this.value.mul(Variable.this.value).reciprocal().negative();
+				return resultValue.div(Variable.this.value).negative();
 			}
 		});
 	}
@@ -240,27 +242,23 @@ public class Variable {
 	}
 
 	public final Variable log(Tensor antilogarithm) {
-		return new Variable(value.log(antilogarithm), new Computation(this) {
+		Tensor resultValue = value.log(antilogarithm);
+		return new Variable(resultValue, new Computation(this) {
 
 			@Override
 			protected Tensor gradient() {
-				Tensor two = new Tensor(Variable.this.value.shape());
-				two.constant(2);
-				return Variable.this.value.ln().pow(two).reciprocal().negative().mul(Variable.this.value.reciprocal())
-						.mul(antilogarithm.ln());
+				return resultValue.div(Variable.this.value.ln()).div(Variable.this.value).negative();
 			}
 		});
 	}
 
 	public final Variable log(Variable antilogarithm) {
-		return new Variable(this.value.log(antilogarithm.value), new Computation(this) {
+		Tensor resultValue = this.value.log(antilogarithm.value);
+		return new Variable(resultValue, new Computation(this) {
 
 			@Override
 			protected Tensor gradient() {
-				Tensor two = new Tensor(Variable.this.value.shape());
-				two.constant(2);
-				return Variable.this.value.ln().pow(two).reciprocal().negative().mul(Variable.this.value.reciprocal())
-						.mul(antilogarithm.value.ln());
+				return resultValue.div(Variable.this.value.ln()).div(Variable.this.value).negative();
 			}
 		}, new Computation(antilogarithm) {
 
