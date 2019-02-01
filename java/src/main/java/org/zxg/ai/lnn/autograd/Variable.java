@@ -7,6 +7,7 @@
  */
 package org.zxg.ai.lnn.autograd;
 
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -51,13 +52,13 @@ public class Variable {
 		}
 	}
 
-	private final void backwardInternal(Tensor gradient) {
-		if (this.computations != null) {
-			for (Computation c : this.computations) {
-				c.creator.backwardInternal(c.backward(gradient));
-			}
-		} else if (this.gradient != null) {
-			this.gradient = this.gradient.add(gradient);
+	private static final class BackwardContext {
+		final Tensor forwardGradient;
+		final Computation computation;
+
+		BackwardContext(Tensor forwardGradient, Computation computation) {
+			this.forwardGradient = forwardGradient;
+			this.computation = computation;
 		}
 	}
 
@@ -68,7 +69,21 @@ public class Variable {
 		} else {
 			value.checkSameShape(gradient);
 		}
-		backwardInternal(gradient);
+		Deque<BackwardContext> contextStack = new LinkedList<>();
+		contextStack.push(new BackwardContext(gradient, new OnesGradientComputation(this)));
+		while (!contextStack.isEmpty()) {
+			BackwardContext context = contextStack.pop();
+			Computation contextComputation = context.computation;
+			Tensor variableGradient = contextComputation.backward(context.forwardGradient);
+			Variable variable = contextComputation.creator;
+			if (variable.computations != null) {
+				for (Computation c : variable.computations) {
+					contextStack.push(new BackwardContext(variableGradient, c));
+				}
+			} else if (variable.gradient != null) {
+				variable.gradient = variable.gradient.add(variableGradient);
+			}
+		}
 	}
 
 	public final void backward() {
@@ -254,17 +269,24 @@ public class Variable {
 
 	public final Variable log(Variable antilogarithm) {
 		Tensor resultValue = this.value.log(antilogarithm.value);
+		CachedComputation lnThis = new CachedComputation() {
+
+			@Override
+			protected Tensor compute() {
+				return Variable.this.value.ln();
+			}
+		};
 		return new Variable(resultValue, new Computation(this) {
 
 			@Override
 			protected Tensor gradient() {
-				return resultValue.div(Variable.this.value.ln()).div(Variable.this.value).negative();
+				return resultValue.div(lnThis.result()).div(Variable.this.value).negative();
 			}
 		}, new Computation(antilogarithm) {
 
 			@Override
 			protected Tensor gradient() {
-				return Variable.this.value.ln().mul(antilogarithm.value).reciprocal();
+				return lnThis.result().mul(antilogarithm.value).reciprocal();
 			}
 		});
 	}
