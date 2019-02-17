@@ -35,8 +35,8 @@ class UniformRandomKernel extends Kernel {
 	public void run() {
 		final int gid0 = getGlobalId();
 		long seed = seed_$constant$[0] * (gid0 + 1);
-		seed = (seed ^ 0x5DEECE66DL) & ((1L << 48) - 1);
-		seed = (seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
+		seed = (seed ^ TensorRandom.MULTIPLIER) & TensorRandom.MASK;
+		seed = (seed * TensorRandom.MULTIPLIER + TensorRandom.ADDEND) & TensorRandom.MASK;
 		final int next24 = (int) (seed >>> 24);
 		final float nextFloat = next24 / ((float) (1 << 24));
 		result[gid0] = nextFloat * interval_$constant$[1] + interval_$constant$[0];

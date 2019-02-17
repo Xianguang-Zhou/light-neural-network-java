@@ -7,16 +7,29 @@
  */
 package org.zxg.ai.lnn.tensor;
 
+import com.aparapi.Kernel;
+
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class Array {
+class SubtractValueKernel extends Kernel {
 
-	public static int[] a(int... e) {
-		return e;
+	float[] left, right, result;
+
+	SubtractValueKernel(float[] left, float right, float[] result) {
+		this.left = left;
+		this.right = new float[] { right };
+		this.result = result;
 	}
 
-	public static float[] a(float... e) {
-		return e;
+	void execute() {
+		execute(left.length);
+		dispose();
+	}
+
+	@Override
+	public void run() {
+		int i = getGlobalId();
+		result[i] = left[i] - right[0];
 	}
 }

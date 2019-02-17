@@ -25,54 +25,36 @@ final class LeftDotComputation extends Computation {
 
 	@Override
 	protected Tensor backward(Tensor forwardGradient) {
-		if (forwardGradient.ndim() == 0) {
-			if (constant.ndim() == 0) {
-				return forwardGradient.mul(constant);
-			} else {
-				return forwardGradient.reshape(1).broadcastTo(constant.shape()).mul(constant);
-			}
+		if (0 == forwardGradient.ndim()) {
+			return constant.mul(forwardGradient.scalar());
+		} else if (0 == constant.ndim()) {
+			return forwardGradient.mul(constant.scalar());
+		} else if (0 == creator.value().ndim()) {
+			return forwardGradient.mul(constant).sum();
 		} else {
-			Tensor creatorValue = creator.value();
-			forwardGradient = reduceNdim(forwardGradient, creatorValue.ndim(), true);
-			Tensor thisGradient = increaseNdim(reduceNdim(constant, 2, false).transpose(), forwardGradient.ndim());
-			Tensor backwardGradient = thisGradient.dot(forwardGradient);
-			backwardGradient.setShape(creatorValue.shape());
-			return backwardGradient;
+			forwardGradient = changeNdim(forwardGradient, creator.value().ndim(), true);
+			Tensor thisGradient = changeNdim(constant, 2, false).transpose();
+			return thisGradient.dot(forwardGradient);
 		}
 	}
 
-	private static Tensor increaseNdim(Tensor tensor, int newNdim) {
-		int[] newShape = new int[newNdim];
+	private static Tensor changeNdim(Tensor tensor, int newNdim, boolean isProductGradient) {
 		int oldNdim = tensor.ndim();
-		int[] oldShape = tensor.shape();
-		int copyBeginIndex = newNdim - oldNdim;
-		for (int i = 0; i < newNdim; i++) {
-			if (i < copyBeginIndex) {
-				newShape[i] = 1;
-			} else {
-				newShape[i] = oldShape[i - copyBeginIndex];
+		if (oldNdim < newNdim) {
+			tensor = tensor.expandDims(0, newNdim - oldNdim);
+		} else {
+			int axisLengthProduct = 1;
+			while (tensor.ndim() > newNdim) {
+				int[] tensorShape = tensor.shape();
+				if (isProductGradient) {
+					axisLengthProduct *= tensorShape[0];
+				}
+				tensor = tensor.sumAxis(0);
+				tensor.setShape(Arrays.copyOfRange(tensorShape, 1, tensorShape.length));
 			}
-		}
-		return tensor.reshape(newShape);
-	}
-
-	private static Tensor reduceNdim(Tensor tensor, int newNdim, boolean isProductGradient) {
-		while (tensor.ndim() > newNdim) {
-			int[] tensorShape = tensor.shape();
-			int[] constantShape = new int[tensorShape.length];
-			int constantShapeLastIndex = constantShape.length - 1;
-			constantShape[constantShapeLastIndex] = tensorShape[0];
-			for (int i = 0; i < constantShapeLastIndex; i++) {
-				constantShape[i] = 1;
+			if (axisLengthProduct != 1) {
+				tensor = tensor.mul(1.0f / axisLengthProduct);
 			}
-			Tensor constantTensor = new Tensor(constantShape);
-			float constantValue = 1.0f;
-			if (isProductGradient) {
-				constantValue /= constantShape[constantShapeLastIndex];
-			}
-			constantTensor.constant(constantValue);
-			tensor = constantTensor.dot(tensor);
-			tensor.setShape(Arrays.copyOfRange(tensorShape, 1, tensorShape.length));
 		}
 		return tensor;
 	}

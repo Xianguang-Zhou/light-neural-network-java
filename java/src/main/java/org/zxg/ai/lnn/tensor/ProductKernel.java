@@ -17,14 +17,14 @@ class ProductKernel extends Kernel {
 
 	@Constant
 	int[] cacheDataShape_$constant$, resultDimSizes_$constant$, leftDimSizes_$constant$, rightDimSizes_$constant$,
-			halfOfResultNdim_$constant$;
+			axisLimits_$constant$;
 	@Constant
 	float[] leftData_$constant$, rightData_$constant$;
 	float[][] cacheData;
 	float[] resultData;
 
 	ProductKernel(Tensor left, Tensor right, Tensor result) {
-		cacheDataShape_$constant$ = new int[] { result.data.length, left.shape[left.shape.length - 1] };
+		cacheDataShape_$constant$ = new int[] { result.data.length, right.shape[0] };
 		cacheData = new float[cacheDataShape_$constant$[0]][cacheDataShape_$constant$[1]];
 		resultData = result.data;
 		resultDimSizes_$constant$ = result.dimSizes;
@@ -32,7 +32,7 @@ class ProductKernel extends Kernel {
 		rightData_$constant$ = right.data;
 		leftDimSizes_$constant$ = left.dimSizes;
 		rightDimSizes_$constant$ = right.dimSizes;
-		halfOfResultNdim_$constant$ = new int[] { result.shape.length / 2 };
+		axisLimits_$constant$ = new int[] { left.shape.length - 1, right.shape.length };
 	}
 
 	void execute() {
@@ -51,14 +51,14 @@ class ProductKernel extends Kernel {
 			int resultDimSizesIndex = 0;
 			int resultDimSize = 0;
 			int leftDataIndex = gid1;
-			int dimSizesIndexLimit = halfOfResultNdim_$constant$[0];
+			int dimSizesIndexLimit = axisLimits_$constant$[0];
 			for (int i = 0; i < dimSizesIndexLimit;) {
 				resultDimSize = resultDimSizes_$constant$[resultDimSizesIndex++];
 				leftDataIndex += ((resultDataIndex / resultDimSize) * leftDimSizes_$constant$[i++]);
 				resultDataIndex %= resultDimSize;
 			}
 			int rightDataIndex = gid1 * rightDimSizes_$constant$[0];
-			dimSizesIndexLimit++;
+			dimSizesIndexLimit = axisLimits_$constant$[1];
 			for (int i = 1; i < dimSizesIndexLimit;) {
 				resultDimSize = resultDimSizes_$constant$[resultDimSizesIndex++];
 				rightDataIndex += ((resultDataIndex / resultDimSize) * rightDimSizes_$constant$[i++]);

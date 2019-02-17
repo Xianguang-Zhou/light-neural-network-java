@@ -7,16 +7,33 @@
  */
 package org.zxg.ai.lnn.tensor;
 
+import com.aparapi.Kernel;
+
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class Array {
+class ReluKernel extends Kernel {
 
-	public static int[] a(int... e) {
-		return e;
+	float[] source, result;
+
+	ReluKernel(float[] source, float[] result) {
+		this.source = source;
+		this.result = result;
 	}
 
-	public static float[] a(float... e) {
-		return e;
+	void execute() {
+		execute(result.length);
+		dispose();
+	}
+
+	@Override
+	public void run() {
+		final int gid = getGlobalId();
+		float element = source[gid];
+		if (element > 0) {
+			result[gid] = element;
+		} else {
+			result[gid] = 0;
+		}
 	}
 }

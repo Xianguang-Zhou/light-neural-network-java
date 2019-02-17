@@ -7,16 +7,28 @@
  */
 package org.zxg.ai.lnn.tensor;
 
+import com.aparapi.Kernel;
+
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class Array {
+class TanhKernel extends Kernel {
 
-	public static int[] a(int... e) {
-		return e;
+	float[] source, result;
+
+	TanhKernel(float[] source, float[] result) {
+		this.source = source;
+		this.result = result;
 	}
 
-	public static float[] a(float... e) {
-		return e;
+	void execute() {
+		execute(result.length);
+		dispose();
+	}
+
+	@Override
+	public void run() {
+		final int gid = getGlobalId();
+		result[gid] = tanh(source[gid]);
 	}
 }

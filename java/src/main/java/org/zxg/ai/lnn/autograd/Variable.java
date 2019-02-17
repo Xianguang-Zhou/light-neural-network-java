@@ -90,16 +90,74 @@ public class Variable {
 		backward(null);
 	}
 
+	public final Variable reshape(int... shape) {
+		return new Variable(value.reshape(shape), new Computation(this) {
+
+			@Override
+			protected Tensor backward(Tensor forwardGradient) {
+				return forwardGradient.reshape(Variable.this.value.shape());
+			}
+		});
+	}
+
+	public final Variable expandDims(int axis, int times) {
+		return new Variable(value.expandDims(axis, times), new Computation(this) {
+
+			@Override
+			protected Tensor backward(Tensor forwardGradient) {
+				return forwardGradient.contractDims(axis, times);
+			}
+		});
+	}
+
+	public final Variable contractDims(int axis, int times) {
+		return new Variable(value.contractDims(axis, times), new Computation(this) {
+
+			@Override
+			protected Tensor backward(Tensor forwardGradient) {
+				return forwardGradient.expandDims(axis, times);
+			}
+		});
+	}
+
+	public final Variable broadcastTo(int... shape) {
+		return new Variable(value.broadcastTo(shape), new Computation(this) {
+
+			@Override
+			protected Tensor backward(Tensor forwardGradient) {
+				int[] oldShape = Variable.this.value.shape();
+				for (int axis = 0; axis < oldShape.length; axis++) {
+					if (oldShape[axis] != shape[axis]) {
+						forwardGradient = forwardGradient.sumAxis(axis);
+					}
+				}
+				return forwardGradient;
+			}
+		});
+	}
+
 	public final Variable negative() {
 		return new Variable(value.negative(), new Computation(this) {
 
 			@Override
-			protected Tensor gradient() {
-				Tensor g = new Tensor(Variable.this.value.shape());
-				g.constant(-1);
-				return g;
+			protected Tensor backward(Tensor forwardGradient) {
+				return forwardGradient.mul(-1);
 			}
 		});
+	}
+
+	public final Variable abs() {
+		return new Variable(value.abs(), new Computation(this) {
+
+			@Override
+			protected Tensor gradient() {
+				return value.sign();
+			}
+		});
+	}
+
+	public final Variable add(float constant) {
+		return new Variable(value.add(constant), new OnesGradientComputation(this));
 	}
 
 	public final Variable add(Tensor constant) {
@@ -111,6 +169,10 @@ public class Variable {
 				new OnesGradientComputation(other));
 	}
 
+	public final Variable sub(float constant) {
+		return new Variable(value.sub(constant), new OnesGradientComputation(this));
+	}
+
 	public final Variable sub(Tensor constant) {
 		return new Variable(value.sub(constant), new OnesGradientComputation(this));
 	}
@@ -119,10 +181,18 @@ public class Variable {
 		return new Variable(this.value.sub(other.value), new OnesGradientComputation(this), new Computation(other) {
 
 			@Override
-			protected Tensor gradient() {
-				Tensor g = new Tensor(other.value.shape());
-				g.constant(-1);
-				return g;
+			protected Tensor backward(Tensor forwardGradient) {
+				return forwardGradient.mul(-1);
+			}
+		});
+	}
+
+	public final Variable mul(float constant) {
+		return new Variable(value.mul(constant), new Computation(this) {
+
+			@Override
+			protected Tensor backward(Tensor forwardGradient) {
+				return forwardGradient.mul(constant);
 			}
 		});
 	}
@@ -149,6 +219,16 @@ public class Variable {
 			@Override
 			protected Tensor gradient() {
 				return Variable.this.value;
+			}
+		});
+	}
+
+	public final Variable div(float constant) {
+		return new Variable(value.div(constant), new Computation(this) {
+
+			@Override
+			protected Tensor backward(Tensor forwardGradient) {
+				return forwardGradient.div(constant);
 			}
 		});
 	}
@@ -197,9 +277,7 @@ public class Variable {
 
 			@Override
 			protected Tensor gradient() {
-				Tensor two = new Tensor(resultValue.shape());
-				two.constant(2);
-				return resultValue.mul(two).reciprocal();
+				return resultValue.mul(2).reciprocal();
 			}
 		});
 	}
@@ -215,14 +293,22 @@ public class Variable {
 		});
 	}
 
+	public final Variable pow(float exponent) {
+		return new Variable(value.pow(exponent), new Computation(this) {
+
+			@Override
+			protected Tensor gradient() {
+				return Variable.this.value.pow(exponent - 1).mul(exponent);
+			}
+		});
+	}
+
 	public final Variable pow(Tensor exponent) {
 		return new Variable(value.pow(exponent), new Computation(this) {
 
 			@Override
 			protected Tensor gradient() {
-				Tensor one = new Tensor(exponent.shape());
-				one.ones();
-				return Variable.this.value.pow(exponent.sub(one)).mul(exponent);
+				return Variable.this.value.pow(exponent.sub(1)).mul(exponent);
 			}
 		});
 	}
@@ -233,9 +319,7 @@ public class Variable {
 
 			@Override
 			protected Tensor gradient() {
-				Tensor one = new Tensor(exponent.value.shape());
-				one.ones();
-				return Variable.this.value.pow(exponent.value.sub(one)).mul(exponent.value);
+				return Variable.this.value.pow(exponent.value.sub(1)).mul(exponent.value);
 			}
 		}, new Computation(exponent) {
 
@@ -291,6 +375,28 @@ public class Variable {
 		});
 	}
 
+	public final Variable tanh() {
+		Tensor resultValue = value.tanh();
+		return new Variable(resultValue, new Computation(this) {
+
+			@Override
+			protected Tensor gradient() {
+				return resultValue.pow(2).negative().add(1);
+			}
+		});
+	}
+
+	public final Variable relu() {
+		Tensor resultValue = value.relu();
+		return new Variable(resultValue, new Computation(this) {
+
+			@Override
+			protected Tensor gradient() {
+				return resultValue.sign();
+			}
+		});
+	}
+
 	public final Variable transpose() {
 		return new Variable(this.value.transpose(), new Computation(this) {
 
@@ -332,8 +438,16 @@ public class Variable {
 		return value;
 	}
 
+	public final void value(Tensor value) {
+		this.value = value;
+	}
+
 	public final Tensor gradient() {
 		return gradient;
+	}
+
+	public final void zeroGradient() {
+		gradient.zeros();
 	}
 
 	public final boolean requiresGradient() {

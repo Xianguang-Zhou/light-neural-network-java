@@ -12,6 +12,10 @@ package org.zxg.ai.lnn.tensor;
  */
 public class TensorRandom {
 
+	protected static final long MASK = (1L << 48) - 1;
+	protected static final long MULTIPLIER = 0x5DEECE66DL;
+	protected static final long ADDEND = 0xBL;
+
 	private long seed;
 
 	public TensorRandom() {
@@ -27,11 +31,11 @@ public class TensorRandom {
 	}
 
 	public final void seed(long seed) {
-		this.seed = (seed ^ 0x5DEECE66DL) & ((1L << 48) - 1);
+		this.seed = (seed ^ MULTIPLIER) & MASK;
 	}
 
 	protected final void nextSeed() {
-		seed = (seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
+		seed = (seed * MULTIPLIER + ADDEND) & MASK;
 	}
 
 	public final void uniform(Tensor t) {
@@ -39,8 +43,8 @@ public class TensorRandom {
 	}
 
 	public final void uniform(float low, float high, Tensor t) {
-		new UniformRandomKernel(seed, low, high, t.data).execute();
 		nextSeed();
+		new UniformRandomKernel(seed, low, high, t.data).execute();
 	}
 
 	public final void normal(Tensor t) {
@@ -48,7 +52,7 @@ public class TensorRandom {
 	}
 
 	public final void normal(float mean, float standardDeviation, Tensor t) {
-		new NormalRandomKernel(seed, mean, standardDeviation, t.data).execute();
 		nextSeed();
+		new NormalRandomKernel(seed, mean, standardDeviation, t.data).execute();
 	}
 }

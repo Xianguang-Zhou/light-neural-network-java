@@ -73,6 +73,10 @@ public class Tensor implements Cloneable {
 		this.data = data;
 	}
 
+	public final float scalar() {
+		return data[0];
+	}
+
 	public final int size() {
 		return data.length;
 	}
@@ -274,6 +278,36 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
+	public final Tensor expandDims(int axis, int times) {
+		if (axis < 0 || axis > this.shape.length || times < 1) {
+			throw new IndexOutOfBoundsException();
+		}
+		int[] shape = new int[this.shape.length + times];
+		System.arraycopy(this.shape, 0, shape, 0, axis);
+		int axisAddTimes = axis + times;
+		for (int i = axis; i < axisAddTimes;) {
+			shape[i++] = 1;
+		}
+		System.arraycopy(this.shape, axis, shape, axisAddTimes, this.shape.length - axis);
+		return reshape(shape);
+	}
+
+	public final Tensor contractDims(int axis, int times) {
+		int axisAddTimes = axis + times;
+		if (axis < 0 || axisAddTimes > this.shape.length || times < 1) {
+			throw new IndexOutOfBoundsException();
+		}
+		for (int i = axis; i < axisAddTimes;) {
+			if (this.shape[i++] != 1) {
+				throw new ShapeException();
+			}
+		}
+		int[] shape = new int[this.shape.length - times];
+		System.arraycopy(this.shape, 0, shape, 0, axis);
+		System.arraycopy(this.shape, axisAddTimes, shape, axis, shape.length - axis);
+		return reshape(shape);
+	}
+
 	public final void constant(float constant) {
 		new ConstantKernel(constant, data).execute();
 	}
@@ -318,10 +352,22 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
+	public final Tensor sign() {
+		Tensor result = new Tensor(shape);
+		new SignKernel(data, result.data).execute();
+		return result;
+	}
+
 	public final Tensor add(Tensor other) {
 		checkSameShape(other);
 		Tensor result = new Tensor(shape);
 		new AddKernel(data, other.data, result.data).execute();
+		return result;
+	}
+
+	public final Tensor add(float value) {
+		Tensor result = new Tensor(shape);
+		new AddValueKernel(data, value, result.data).execute();
 		return result;
 	}
 
@@ -332,10 +378,22 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
+	public final Tensor sub(float value) {
+		Tensor result = new Tensor(shape);
+		new SubtractValueKernel(data, value, result.data).execute();
+		return result;
+	}
+
 	public final Tensor mul(Tensor other) {
 		checkSameShape(other);
 		Tensor result = new Tensor(shape);
 		new MultiplyKernel(data, other.data, result.data).execute();
+		return result;
+	}
+
+	public final Tensor mul(float value) {
+		Tensor result = new Tensor(shape);
+		new MultiplyValueKernel(data, value, result.data).execute();
 		return result;
 	}
 
@@ -346,6 +404,12 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
+	public final Tensor div(float value) {
+		Tensor result = new Tensor(shape);
+		new DivideValueKernel(data, value, result.data).execute();
+		return result;
+	}
+
 	public final Tensor reciprocal() {
 		Tensor result = new Tensor(shape);
 		new ReciprocalKernel(data, result.data).execute();
@@ -353,14 +417,15 @@ public class Tensor implements Cloneable {
 	}
 
 	public final Tensor dot(Tensor other) {
-		checkSameDim(other);
 		if (this.shape.length == 0) {
-			return new Tensor(new float[] { this.data[0] * other.data[0] }, new int[0]);
+			return other.mul(this.data[0]);
+		} else if (other.shape.length == 0) {
+			return this.mul(other.data[0]);
 		} else {
 			if (this.shape[this.shape.length - 1] != other.shape[0]) {
 				throw new ShapeException();
 			}
-			if (this.shape.length == 1) {
+			if (this.shape.length == 1 && other.shape.length == 1) {
 				float[] resultData = new float[this.data.length];
 				new MultiplyKernel(this.data, other.data, resultData).execute();
 				float resultValue = 0;
@@ -368,15 +433,14 @@ public class Tensor implements Cloneable {
 					resultValue += value;
 				}
 				return new Tensor(new float[] { resultValue }, new int[0]);
-			} else if (this.shape.length == 2) {
-				int[] resultShape = new int[] { this.shape[0], other.shape[1] };
-				Tensor result = new Tensor(resultShape);
-				new MatrixProductKernel(this, other, result).execute();
-				return result;
 			} else {
 				int[] resultShape = new int[this.shape.length + other.shape.length - 2];
-				System.arraycopy(this.shape, 0, resultShape, 0, this.shape.length - 1);
-				System.arraycopy(other.shape, 1, resultShape, this.shape.length - 1, other.shape.length - 1);
+				if (this.shape.length > 1) {
+					System.arraycopy(this.shape, 0, resultShape, 0, this.shape.length - 1);
+				}
+				if (other.shape.length > 1) {
+					System.arraycopy(other.shape, 1, resultShape, this.shape.length - 1, other.shape.length - 1);
+				}
 				Tensor result = new Tensor(resultShape);
 				new ProductKernel(this, other, result).execute();
 				return result;
@@ -403,6 +467,12 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
+	public final Tensor pow(float exponent) {
+		Tensor result = new Tensor(shape);
+		new PowerValueKernel(data, exponent, result.data).execute();
+		return result;
+	}
+
 	public final Tensor ln() {
 		Tensor result = new Tensor(shape);
 		new NaturalLogarithmKernel(data, result.data).execute();
@@ -413,6 +483,18 @@ public class Tensor implements Cloneable {
 		checkSameShape(antilogarithm);
 		Tensor result = new Tensor(shape);
 		new LogarithmKernel(data, antilogarithm.data, result.data).execute();
+		return result;
+	}
+
+	public final Tensor tanh() {
+		Tensor result = new Tensor(shape);
+		new TanhKernel(data, result.data).execute();
+		return result;
+	}
+
+	public final Tensor relu() {
+		Tensor result = new Tensor(shape);
+		new ReluKernel(data, result.data).execute();
 		return result;
 	}
 
@@ -436,6 +518,35 @@ public class Tensor implements Cloneable {
 
 	public final boolean moreThanOrEquals(Tensor other) {
 		return other.lessThanOrEquals(this);
+	}
+
+	public final Tensor sumAxis(int axis) {
+		if (1 == this.data.length) {
+			return clone();
+		}
+		int[] shape = new int[this.shape.length];
+		System.arraycopy(this.shape, 0, shape, 0, shape.length);
+		if (axis < 0 || axis > this.shape.length - 1) {
+			throw new IndexOutOfBoundsException();
+		}
+		shape[axis] = 1;
+		Tensor result = new Tensor(shape);
+		new SumAxisKernel(axis, this, result).execute();
+		return result;
+	}
+
+	public final Tensor sum() {
+		Tensor result = this;
+		for (int axis = 0; axis < shape.length; axis++) {
+			if (shape[axis] != 1) {
+				result = result.sumAxis(axis);
+			}
+		}
+		if (this == result) {
+			result = result.clone();
+		}
+		result.setShape();
+		return result;
 	}
 
 	@Override

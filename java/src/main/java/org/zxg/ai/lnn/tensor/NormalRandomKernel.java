@@ -52,8 +52,8 @@ class NormalRandomKernel extends Kernel {
 
 	private static float nextFloat(long seed, int index) {
 		seed = seed * (index + 1);
-		seed = (seed ^ 0x5DEECE66DL) & ((1L << 48) - 1);
-		seed = (seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
+		seed = (seed ^ TensorRandom.MULTIPLIER) & TensorRandom.MASK;
+		seed = (seed * TensorRandom.MULTIPLIER + TensorRandom.ADDEND) & TensorRandom.MASK;
 		final int next24 = (int) (seed >>> 24);
 		return next24 / ((float) (1 << 24));
 	}

@@ -7,16 +7,29 @@
  */
 package org.zxg.ai.lnn.tensor;
 
+import com.aparapi.Kernel;
+
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class Array {
+class PowerValueKernel extends Kernel {
 
-	public static int[] a(int... e) {
-		return e;
+	float[] base, exponent, result;
+
+	PowerValueKernel(float[] base, float exponent, float[] result) {
+		this.base = base;
+		this.exponent = new float[] { exponent };
+		this.result = result;
 	}
 
-	public static float[] a(float... e) {
-		return e;
+	void execute() {
+		execute(result.length);
+		dispose();
+	}
+
+	@Override
+	public void run() {
+		int i = getGlobalId();
+		result[i] = pow(base[i], exponent[0]);
 	}
 }
