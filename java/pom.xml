@@ -24,6 +24,7 @@
 	</developers>
 
 	<properties>
+		<jocl.version>2.3.2</jocl.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -34,6 +35,18 @@
 			<groupId>com.aparapi</groupId>
 			<artifactId>aparapi</artifactId>
 			<version>1.10.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.jogamp.jocl</groupId>
+			<artifactId>jocl-main</artifactId>
+			<version>${jocl.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jogamp.gluegen</groupId>
+			<artifactId>gluegen-rt-main</artifactId>
+			<version>${jocl.version}</version>
 		</dependency>
 	</dependencies>
 </project>
