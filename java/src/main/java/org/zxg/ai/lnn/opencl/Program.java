@@ -28,7 +28,11 @@ public class Program implements Closeable {
 
 	public static CLContext defaultContext() {
 		if (null == DEFAULT_CONTEXT) {
-			DEFAULT_CONTEXT = CLContext.create();
+			synchronized (Program.class) {
+				if (null == DEFAULT_CONTEXT) {
+					DEFAULT_CONTEXT = CLContext.create();
+				}
+			}
 		}
 		return DEFAULT_CONTEXT;
 	}

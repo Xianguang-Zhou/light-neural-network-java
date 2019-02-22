@@ -27,7 +27,7 @@ public class Calling {
 	private CLProgram program;
 	private String function;
 	private List<Arg> args = new LinkedList<>();
-	private Range range;
+	private List<Range> ranges = new LinkedList<>();
 	private CLDevice device;
 
 	public Calling(CLProgram program, String function) {
@@ -52,8 +52,8 @@ public class Calling {
 		return arg(Arg.inOut(directBuffer));
 	}
 
-	public Calling range(Range range) {
-		this.range = range;
+	public Calling pass(Range range) {
+		this.ranges.add(range);
 		return this;
 	}
 
@@ -77,13 +77,16 @@ public class Calling {
 	}
 
 	public void execute() throws LnnCLException {
-		if (null == range || null == device) {
+		if (ranges.isEmpty() || null == device) {
 			throw new NullPointerException();
 		}
 		try {
 			CLCommandQueue queue = device.createCommandQueue();
 			try {
-				CLKernel kernel = program.createCLKernel(function);
+				CLKernel kernel;
+				synchronized (program) {
+					kernel = program.createCLKernel(function);
+				}
 				try {
 					CLContext ctx = kernel.getContext();
 					for (Arg arg : args) {
@@ -95,7 +98,20 @@ public class Calling {
 							queue.putWriteBuffer(arg.clBuffer, false);
 						}
 					}
-					range.putToQueue(queue, kernel);
+					if (ranges.size() > 1) {
+						int passIdArgIndex = args.size(), passId = 0;
+						for (Range range : ranges) {
+							if (0 == passId) {
+								kernel.putArg(passId);
+							} else {
+								kernel.setArg(passIdArgIndex, passId);
+							}
+							range.putToQueue(queue, kernel);
+							passId++;
+						}
+					} else {
+						ranges.get(0).putToQueue(queue, kernel);
+					}
 					for (Arg arg : args) {
 						if (arg.isOut()) {
 							queue.putReadBuffer(arg.clBuffer, false);
