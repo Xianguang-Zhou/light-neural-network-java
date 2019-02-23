@@ -74,6 +74,14 @@ public class Calling {
 		return arg(directBuffer, BufferArg.Type.IN_OUT);
 	}
 
+	public Calling cache(int size) {
+		return arg(new CacheArg(size));
+	}
+
+	public Calling cache(CacheArg.Type type, int number) {
+		return arg(new CacheArg(type, number));
+	}
+
 	public Calling pass(Range range) {
 		this.ranges.add(range);
 		return this;
