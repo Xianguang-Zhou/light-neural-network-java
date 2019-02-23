@@ -12,12 +12,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.jogamp.opencl.CLCommandQueue;
-import com.jogamp.opencl.CLContext;
 import com.jogamp.opencl.CLDevice;
 import com.jogamp.opencl.CLException;
 import com.jogamp.opencl.CLKernel;
 import com.jogamp.opencl.CLProgram;
-import com.jogamp.opencl.llb.CLMemObjBinding;
 
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
@@ -40,16 +38,40 @@ public class Calling {
 		return this;
 	}
 
+	public Calling arg(float number) {
+		return arg(new FloatArg(number));
+	}
+
+	public Calling arg(double number) {
+		return arg(new DoubleArg(number));
+	}
+
+	public Calling arg(short number) {
+		return arg(new ShortArg(number));
+	}
+
+	public Calling arg(int number) {
+		return arg(new IntArg(number));
+	}
+
+	public Calling arg(long number) {
+		return arg(new LongArg(number));
+	}
+
+	public Calling arg(Buffer directBuffer, BufferArg.Type type) {
+		return arg(new BufferArg(directBuffer, type));
+	}
+
 	public Calling in(Buffer directBuffer) {
-		return arg(Arg.in(directBuffer));
+		return arg(directBuffer, BufferArg.Type.IN);
 	}
 
 	public Calling out(Buffer directBuffer) {
-		return arg(Arg.out(directBuffer));
+		return arg(directBuffer, BufferArg.Type.OUT);
 	}
 
 	public Calling inOut(Buffer directBuffer) {
-		return arg(Arg.inOut(directBuffer));
+		return arg(directBuffer, BufferArg.Type.IN_OUT);
 	}
 
 	public Calling pass(Range range) {
@@ -65,17 +87,6 @@ public class Calling {
 		return this;
 	}
 
-	protected static int argTypeToFlags(Arg.Type type) {
-		switch (type) {
-		case IN:
-			return CLMemObjBinding.CL_MEM_READ_ONLY;
-		case OUT:
-			return CLMemObjBinding.CL_MEM_WRITE_ONLY;
-		default:
-			return CLMemObjBinding.CL_MEM_READ_WRITE;
-		}
-	}
-
 	public void execute() throws LnnCLException {
 		if (ranges.isEmpty() || null == device) {
 			throw new NullPointerException();
@@ -88,15 +99,8 @@ public class Calling {
 					kernel = program.createCLKernel(function);
 				}
 				try {
-					CLContext ctx = kernel.getContext();
 					for (Arg arg : args) {
-						arg.clBuffer = ctx.createBuffer(arg.directBuffer, argTypeToFlags(arg.type));
-						kernel.putArg(arg.clBuffer);
-					}
-					for (Arg arg : args) {
-						if (arg.isIn()) {
-							queue.putWriteBuffer(arg.clBuffer, false);
-						}
+						arg.input(kernel, queue);
 					}
 					if (ranges.size() > 1) {
 						int passIdArgIndex = args.size(), passId = 0;
@@ -113,14 +117,11 @@ public class Calling {
 						ranges.get(0).putToQueue(queue, kernel);
 					}
 					for (Arg arg : args) {
-						if (arg.isOut()) {
-							queue.putReadBuffer(arg.clBuffer, false);
-						}
+						arg.output(queue);
 					}
 					queue.finish();
 					for (Arg arg : args) {
-						arg.clBuffer.release();
-						arg.clBuffer = null;
+						arg.close();
 					}
 				} finally {
 					kernel.release();

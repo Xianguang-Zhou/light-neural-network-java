@@ -7,21 +7,22 @@
  */
 package org.zxg.ai.lnn.opencl;
 
-import java.io.Closeable;
-
 import com.jogamp.opencl.CLCommandQueue;
 import com.jogamp.opencl.CLKernel;
 
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public abstract class Arg implements Closeable {
+public class ShortArg extends Arg {
 
-	public abstract void input(CLKernel kernel, CLCommandQueue queue);
+	private short number;
 
-	public void output(CLCommandQueue queue) {
+	public ShortArg(short number) {
+		this.number = number;
 	}
 
-	public void close() {
+	@Override
+	public void input(CLKernel kernel, CLCommandQueue queue) {
+		kernel.putArg(number);
 	}
 }
