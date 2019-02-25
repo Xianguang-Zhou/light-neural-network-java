@@ -74,6 +74,22 @@ public class Calling {
 		return arg(directBuffer, BufferArg.Type.IN_OUT);
 	}
 
+	public Calling arg(BufferArray array, BufferArg.Type type) {
+		return arg(array.buffer(), type);
+	}
+
+	public Calling in(BufferArray array) {
+		return arg(array, BufferArg.Type.IN);
+	}
+
+	public Calling out(BufferArray array) {
+		return arg(array, BufferArg.Type.OUT);
+	}
+
+	public Calling inOut(BufferArray array) {
+		return arg(array, BufferArg.Type.IN_OUT);
+	}
+
 	public Calling cache(int size) {
 		return arg(new CacheArg(size));
 	}
