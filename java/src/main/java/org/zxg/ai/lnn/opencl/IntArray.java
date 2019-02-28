@@ -95,6 +95,21 @@ public class IntArray extends BufferArray {
 	}
 
 	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof IntArray)) {
+			return false;
+		}
+		IntArray other = (IntArray) obj;
+		return buffer.equals(other.buffer);
+	}
+
+	@Override
 	protected Buffer buffer() {
 		return buffer;
 	}

@@ -95,6 +95,21 @@ public class LongArray extends BufferArray {
 	}
 
 	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof LongArray)) {
+			return false;
+		}
+		LongArray other = (LongArray) obj;
+		return buffer.equals(other.buffer);
+	}
+
+	@Override
 	protected Buffer buffer() {
 		return buffer;
 	}
