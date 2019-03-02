@@ -18,6 +18,12 @@ public class DoubleArray extends BufferArray {
 	private final DoubleBuffer buffer;
 	public final int length;
 
+	public static void copy(DoubleArray src, int srcPos, DoubleArray dest, int destPos, int length) {
+		for (int i = 0; i < length; i++) {
+			dest.set(destPos + i, src.get(srcPos + i));
+		}
+	}
+
 	public DoubleArray(int length) {
 		this.buffer = Buffers.newDirectDoubleBuffer(length);
 		this.length = length;
@@ -85,7 +91,7 @@ public class DoubleArray extends BufferArray {
 	}
 
 	@Override
-	protected Object clone() {
+	public DoubleArray clone() {
 		return new DoubleArray(this);
 	}
 

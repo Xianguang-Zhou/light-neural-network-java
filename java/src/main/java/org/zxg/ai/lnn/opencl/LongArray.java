@@ -18,6 +18,12 @@ public class LongArray extends BufferArray {
 	private final LongBuffer buffer;
 	public final int length;
 
+	public static void copy(LongArray src, int srcPos, LongArray dest, int destPos, int length) {
+		for (int i = 0; i < length; i++) {
+			dest.set(destPos + i, src.get(srcPos + i));
+		}
+	}
+
 	public LongArray(int length) {
 		this.buffer = Buffers.newDirectLongBuffer(length);
 		this.length = length;
@@ -85,7 +91,7 @@ public class LongArray extends BufferArray {
 	}
 
 	@Override
-	protected Object clone() {
+	public LongArray clone() {
 		return new LongArray(this);
 	}
 

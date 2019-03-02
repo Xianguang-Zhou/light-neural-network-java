@@ -18,6 +18,12 @@ public class IntArray extends BufferArray {
 	private final IntBuffer buffer;
 	public final int length;
 
+	public static void copy(IntArray src, int srcPos, IntArray dest, int destPos, int length) {
+		for (int i = 0; i < length; i++) {
+			dest.set(destPos + i, src.get(srcPos + i));
+		}
+	}
+
 	public IntArray(int length) {
 		this.buffer = Buffers.newDirectIntBuffer(length);
 		this.length = length;
@@ -85,7 +91,7 @@ public class IntArray extends BufferArray {
 	}
 
 	@Override
-	protected Object clone() {
+	public IntArray clone() {
 		return new IntArray(this);
 	}
 

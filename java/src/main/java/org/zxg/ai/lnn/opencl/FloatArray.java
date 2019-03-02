@@ -18,6 +18,12 @@ public class FloatArray extends BufferArray {
 	private final FloatBuffer buffer;
 	public final int length;
 
+	public static void copy(FloatArray src, int srcPos, FloatArray dest, int destPos, int length) {
+		for (int i = 0; i < length; i++) {
+			dest.set(destPos + i, src.get(srcPos + i));
+		}
+	}
+
 	public FloatArray(int length) {
 		this.buffer = Buffers.newDirectFloatBuffer(length);
 		this.length = length;
@@ -85,7 +91,7 @@ public class FloatArray extends BufferArray {
 	}
 
 	@Override
-	protected Object clone() {
+	public FloatArray clone() {
 		return new FloatArray(this);
 	}
 
