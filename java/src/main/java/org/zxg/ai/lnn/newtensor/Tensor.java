@@ -7,8 +7,16 @@
  */
 package org.zxg.ai.lnn.newtensor;
 
+import org.zxg.ai.lnn.newtensor.kernel.AbsKernel;
+import org.zxg.ai.lnn.newtensor.kernel.ConstantKernel;
+import org.zxg.ai.lnn.newtensor.kernel.NegativeKernel;
+import org.zxg.ai.lnn.newtensor.kernel.ReciprocalKernel;
+import org.zxg.ai.lnn.newtensor.kernel.ReluKernel;
+import org.zxg.ai.lnn.newtensor.kernel.SignKernel;
+import org.zxg.ai.lnn.opencl.Device;
 import org.zxg.ai.lnn.opencl.FloatArray;
 import org.zxg.ai.lnn.opencl.IntArray;
+import org.zxg.ai.lnn.opencl.Kernel;
 
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
@@ -16,18 +24,25 @@ import org.zxg.ai.lnn.opencl.IntArray;
 public class Tensor implements Cloneable {
 
 	private static float DEFAULT_PRECISION = 0.00001f;
+	private static Device DEFAULT_DEVICE;
 
 	public static void defaultPrecision(float precision) {
 		DEFAULT_PRECISION = Math.abs(precision);
 	}
 
-	float precision;
-	FloatArray data;
-	IntArray shape;
-	IntArray dimSizes;
+	public static void defaultDevice(Device device) {
+		DEFAULT_DEVICE = device;
+	}
+
+	private float precision;
+	private Device device;
+	private FloatArray data;
+	private IntArray shape;
+	private IntArray dimSizes;
 
 	public Tensor(Tensor other) {
 		precision = other.precision;
+		device = other.device;
 		data = other.data.clone();
 		shape = other.shape.clone();
 		dimSizes = other.dimSizes.clone();
@@ -35,6 +50,7 @@ public class Tensor implements Cloneable {
 
 	public Tensor(int... shape) {
 		precision = DEFAULT_PRECISION;
+		device = DEFAULT_DEVICE;
 		this.shape = new IntArray(shape);
 		ShapeInfo info = ShapeInfo.create(shape);
 		this.dimSizes = info.dimSizes;
@@ -43,6 +59,7 @@ public class Tensor implements Cloneable {
 
 	public Tensor(IntArray shape) {
 		precision = DEFAULT_PRECISION;
+		device = DEFAULT_DEVICE;
 		this.shape = shape;
 		ShapeInfo info = ShapeInfo.create(shape);
 		this.dimSizes = info.dimSizes;
@@ -51,6 +68,7 @@ public class Tensor implements Cloneable {
 
 	public Tensor(float[] data, int... shape) {
 		precision = DEFAULT_PRECISION;
+		device = DEFAULT_DEVICE;
 		this.shape = new IntArray(shape);
 		ShapeInfo info = ShapeInfo.create(shape);
 		if (info.size != data.length) {
@@ -62,6 +80,7 @@ public class Tensor implements Cloneable {
 
 	public Tensor(FloatArray data, IntArray shape) {
 		precision = DEFAULT_PRECISION;
+		device = DEFAULT_DEVICE;
 		this.shape = shape;
 		ShapeInfo info = ShapeInfo.create(shape);
 		if (info.size != data.length) {
@@ -77,6 +96,18 @@ public class Tensor implements Cloneable {
 
 	public final void precision(float precision) {
 		this.precision = Math.abs(precision);
+	}
+
+	public final Device device() {
+		return device;
+	}
+
+	public final void device(Device device) {
+		this.device = device;
+	}
+
+	protected final <T extends Kernel> T kernel(Class<T> type) {
+		return device.kernel(type);
 	}
 
 	public final FloatArray flatData() {
@@ -113,7 +144,7 @@ public class Tensor implements Cloneable {
 		return shape.length;
 	}
 
-	protected final IntArray dimSizes() {
+	public final IntArray dimSizes() {
 		return dimSizes;
 	}
 
@@ -211,8 +242,18 @@ public class Tensor implements Cloneable {
 		return c;
 	}
 
-	public final Tensor zerosLike() {
+	public final Tensor like() {
 		return new Tensor(shape.clone());
+	}
+
+	public final Tensor zerosLike() {
+		return like();
+	}
+
+	public final Tensor onesLike() {
+		Tensor result = like();
+		result.ones();
+		return result;
 	}
 
 	public final Tensor expandDims(int axis, int times) {
@@ -243,6 +284,52 @@ public class Tensor implements Cloneable {
 		IntArray.copy(this.shape, 0, shape, 0, axis);
 		IntArray.copy(this.shape, axisAddTimes, shape, axis, shape.length - axis);
 		return reshape(shape);
+	}
+
+	public final void constant(float constant) {
+		kernel(ConstantKernel.class).execute(constant, data);
+	}
+
+	public final void constant(double constant) {
+		constant((float) constant);
+	}
+
+	public final void ones() {
+		constant(1);
+	}
+
+	public final void zeros() {
+		constant(0);
+	}
+
+	public final Tensor negative() {
+		Tensor result = like();
+		kernel(NegativeKernel.class).execute(data, result.data);
+		return result;
+	}
+
+	public final Tensor abs() {
+		Tensor result = like();
+		kernel(AbsKernel.class).execute(data, result.data);
+		return result;
+	}
+
+	public final Tensor sign() {
+		Tensor result = like();
+		kernel(SignKernel.class).execute(data, result.data);
+		return result;
+	}
+
+	public final Tensor reciprocal() {
+		Tensor result = like();
+		kernel(ReciprocalKernel.class).execute(data, result.data);
+		return result;
+	}
+
+	public final Tensor relu() {
+		Tensor result = like();
+		kernel(ReluKernel.class).execute(data, result.data);
+		return result;
 	}
 
 	protected float selectPrecision(float otherPrecision) {
@@ -300,5 +387,9 @@ public class Tensor implements Cloneable {
 			appendDim(b, 0, 0);
 		}
 		return b.toString();
+	}
+
+	public void print() {
+		System.out.println(toString());
 	}
 }
