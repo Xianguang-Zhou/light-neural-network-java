@@ -34,6 +34,13 @@ public class Tensor implements Cloneable {
 		DEFAULT_DEVICE = device;
 	}
 
+	public static Device defaultDevice() {
+		if (null == DEFAULT_DEVICE) {
+			DEFAULT_DEVICE = Device.defaultDevice();
+		}
+		return DEFAULT_DEVICE;
+	}
+
 	private float precision;
 	private Device device;
 	private FloatArray data;
@@ -49,8 +56,12 @@ public class Tensor implements Cloneable {
 	}
 
 	public Tensor(int... shape) {
+		this(defaultDevice(), shape);
+	}
+
+	public Tensor(Device device, int... shape) {
 		precision = DEFAULT_PRECISION;
-		device = DEFAULT_DEVICE;
+		this.device = device;
 		this.shape = new IntArray(shape);
 		ShapeInfo info = ShapeInfo.create(shape);
 		this.dimSizes = info.dimSizes;
@@ -58,8 +69,12 @@ public class Tensor implements Cloneable {
 	}
 
 	public Tensor(IntArray shape) {
+		this(defaultDevice(), shape);
+	}
+
+	public Tensor(Device device, IntArray shape) {
 		precision = DEFAULT_PRECISION;
-		device = DEFAULT_DEVICE;
+		this.device = device;
 		this.shape = shape;
 		ShapeInfo info = ShapeInfo.create(shape);
 		this.dimSizes = info.dimSizes;
@@ -67,8 +82,12 @@ public class Tensor implements Cloneable {
 	}
 
 	public Tensor(float[] data, int... shape) {
+		this(defaultDevice(), data, shape);
+	}
+
+	public Tensor(Device device, float[] data, int... shape) {
 		precision = DEFAULT_PRECISION;
-		device = DEFAULT_DEVICE;
+		this.device = device;
 		this.shape = new IntArray(shape);
 		ShapeInfo info = ShapeInfo.create(shape);
 		if (info.size != data.length) {
@@ -79,8 +98,12 @@ public class Tensor implements Cloneable {
 	}
 
 	public Tensor(FloatArray data, IntArray shape) {
+		this(defaultDevice(), data, shape);
+	}
+
+	public Tensor(Device device, FloatArray data, IntArray shape) {
 		precision = DEFAULT_PRECISION;
-		device = DEFAULT_DEVICE;
+		this.device = device;
 		this.shape = shape;
 		ShapeInfo info = ShapeInfo.create(shape);
 		if (info.size != data.length) {

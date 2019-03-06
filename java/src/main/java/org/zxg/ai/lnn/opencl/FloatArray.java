@@ -19,8 +19,20 @@ public class FloatArray extends BufferArray {
 	public final int length;
 
 	public static void copy(FloatArray src, int srcPos, FloatArray dest, int destPos, int length) {
-		for (int i = 0; i < length; i++) {
-			dest.set(destPos + i, src.get(srcPos + i));
+		final FloatBuffer srcBuffer = src.buffer;
+		final FloatBuffer destBuffer = dest.buffer;
+		final int originalSrcPosition = srcBuffer.position();
+		final int originalSrcLimit = srcBuffer.limit();
+		final int originalDestPosition = destBuffer.position();
+		try {
+			srcBuffer.position(srcPos);
+			srcBuffer.limit(srcPos + length);
+			destBuffer.position(destPos);
+			destBuffer.put(srcBuffer);
+		} finally {
+			srcBuffer.position(originalSrcPosition);
+			srcBuffer.limit(originalSrcLimit);
+			destBuffer.position(originalDestPosition);
 		}
 	}
 
@@ -52,11 +64,19 @@ public class FloatArray extends BufferArray {
 		buffer.put(index, value);
 	}
 
+	public void get(int begin, float[] elements, int offset, int length) {
+		final int originalPosition = buffer.position();
+		try {
+			buffer.position(begin);
+			buffer.get(elements, offset, length);
+		} finally {
+			buffer.position(originalPosition);
+		}
+	}
+
 	public float[] get(int begin, int end) {
 		float[] elements = new float[end - begin];
-		for (int i = 0; i < elements.length; i++) {
-			elements[i] = buffer.get(begin + i);
-		}
+		get(begin, elements, 0, elements.length);
 		return elements;
 	}
 
@@ -65,8 +85,12 @@ public class FloatArray extends BufferArray {
 	}
 
 	public void set(int begin, float[] elements, int offset, int length) {
-		for (int i = 0; i < length; i++) {
-			buffer.put(begin + i, elements[offset + i]);
+		final int originalPosition = buffer.position();
+		try {
+			buffer.position(begin);
+			buffer.put(elements, offset, length);
+		} finally {
+			buffer.position(originalPosition);
 		}
 	}
 

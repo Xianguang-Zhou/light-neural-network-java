@@ -18,17 +18,17 @@ import com.jogamp.opencl.CLDevice;
  */
 public class Device implements Closeable {
 
-	private static Device INSTANCE;
+	private static Device DEFAULT_DEVICE;
 
-	public static Device instance() {
-		if (null == INSTANCE) {
+	public static Device defaultDevice() {
+		if (null == DEFAULT_DEVICE) {
 			synchronized (Device.class) {
-				if (null == INSTANCE) {
-					INSTANCE = new Device(Program.defaultDevice());
+				if (null == DEFAULT_DEVICE) {
+					DEFAULT_DEVICE = new Device(Program.defaultDevice());
 				}
 			}
 		}
-		return INSTANCE;
+		return DEFAULT_DEVICE;
 	}
 
 	public final CLDevice clDevice;

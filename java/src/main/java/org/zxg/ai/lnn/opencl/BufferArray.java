@@ -15,4 +15,8 @@ import java.nio.Buffer;
 public abstract class BufferArray {
 
 	protected abstract Buffer buffer();
+
+	public void print() {
+		System.out.println(toString());
+	}
 }
