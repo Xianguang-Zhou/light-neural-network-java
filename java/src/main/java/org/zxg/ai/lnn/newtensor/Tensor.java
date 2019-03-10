@@ -8,7 +8,15 @@
 package org.zxg.ai.lnn.newtensor;
 
 import org.zxg.ai.lnn.newtensor.kernel.AbsKernel;
+import org.zxg.ai.lnn.newtensor.kernel.AddKernel;
+import org.zxg.ai.lnn.newtensor.kernel.AddValueKernel;
+import org.zxg.ai.lnn.newtensor.kernel.ArangeKernel;
+import org.zxg.ai.lnn.newtensor.kernel.AxisSliceKernel;
+import org.zxg.ai.lnn.newtensor.kernel.BroadcastKernel;
 import org.zxg.ai.lnn.newtensor.kernel.ConstantKernel;
+import org.zxg.ai.lnn.newtensor.kernel.DivideKernel;
+import org.zxg.ai.lnn.newtensor.kernel.DivideValueKernel;
+import org.zxg.ai.lnn.newtensor.kernel.EqualKernel;
 import org.zxg.ai.lnn.newtensor.kernel.NegativeKernel;
 import org.zxg.ai.lnn.newtensor.kernel.ReciprocalKernel;
 import org.zxg.ai.lnn.newtensor.kernel.ReluKernel;
@@ -17,6 +25,7 @@ import org.zxg.ai.lnn.opencl.Device;
 import org.zxg.ai.lnn.opencl.FloatArray;
 import org.zxg.ai.lnn.opencl.IntArray;
 import org.zxg.ai.lnn.opencl.Kernel;
+import org.zxg.ai.lnn.tensor.ShapeException;
 
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
@@ -193,7 +202,17 @@ public class Tensor implements Cloneable {
 		return shape1.length == shape2.length;
 	}
 
+	protected static final boolean sameDim(IntArray shape1, int[] shape2) {
+		return shape1.length == shape2.length;
+	}
+
 	protected static final void checkSameDim(IntArray shape1, IntArray shape2) {
+		if (!sameDim(shape1, shape2)) {
+			throw new DimException();
+		}
+	}
+
+	protected static final void checkSameDim(IntArray shape1, int[] shape2) {
 		if (!sameDim(shape1, shape2)) {
 			throw new DimException();
 		}
@@ -229,6 +248,30 @@ public class Tensor implements Cloneable {
 
 	public final void set(float value, int... indexes) {
 		data.set(dataIndex(indexes), value);
+	}
+
+	public final Tensor slice(int begin, int end) {
+		return slice(0, begin, end);
+	}
+
+	public final Tensor slice(int axis, int begin, int end) {
+		if (axis < 0 || axis >= this.shape.length) {
+			throw new IndexOutOfBoundsException();
+		}
+		if (begin < 0 || begin >= end || end > this.shape.get(axis)) {
+			throw new IndexOutOfBoundsException();
+		}
+		int[] shape = new int[this.shape.length];
+		for (int i = 0; i < shape.length; i++) {
+			if (i != axis) {
+				shape[i] = this.shape.get(i);
+			} else {
+				shape[i] = end - begin;
+			}
+		}
+		Tensor result = new Tensor(shape);
+		kernel(AxisSliceKernel.class).execute(axis, begin, this, result);
+		return result;
 	}
 
 	public final void setShape(int... shape) {
@@ -279,6 +322,19 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
+	public final Tensor broadcastTo(int... shape) {
+		checkSameDim(this.shape, shape);
+		for (int i = 0; i < this.shape.length; i++) {
+			int length = this.shape.get(i);
+			if (length != shape[i] && length != 1) {
+				throw new ShapeException();
+			}
+		}
+		Tensor result = new Tensor(shape);
+		kernel(BroadcastKernel.class).execute(this, result);
+		return result;
+	}
+
 	public final Tensor expandDims(int axis, int times) {
 		if (axis < 0 || axis > this.shape.length || times < 1) {
 			throw new IndexOutOfBoundsException();
@@ -325,6 +381,22 @@ public class Tensor implements Cloneable {
 		constant(0);
 	}
 
+	public final void arange(float stop) {
+		arange(0, stop);
+	}
+
+	public final void arange(float start, float stop) {
+		arange(start, stop, 1);
+	}
+
+	public final void arange(float start, float stop, float step) {
+		arange(start, stop, step, 1);
+	}
+
+	public final void arange(float start, float stop, float step, int repeat) {
+		kernel(ArangeKernel.class).execute(start, stop, step, repeat, data);
+	}
+
 	public final Tensor negative() {
 		Tensor result = like();
 		kernel(NegativeKernel.class).execute(data, result.data);
@@ -343,6 +415,32 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
+	public final Tensor add(Tensor other) {
+		checkSameShape(other);
+		Tensor result = new Tensor(shape);
+		kernel(AddKernel.class).execute(data, other.data, result.data);
+		return result;
+	}
+
+	public final Tensor add(float value) {
+		Tensor result = new Tensor(shape);
+		kernel(AddValueKernel.class).execute(data, value, result.data);
+		return result;
+	}
+
+	public final Tensor div(Tensor other) {
+		checkSameShape(other);
+		Tensor result = new Tensor(shape);
+		kernel(DivideKernel.class).execute(data, other.data, result.data);
+		return result;
+	}
+
+	public final Tensor div(float value) {
+		Tensor result = new Tensor(shape);
+		kernel(DivideValueKernel.class).execute(data, value, result.data);
+		return result;
+	}
+
 	public final Tensor reciprocal() {
 		Tensor result = like();
 		kernel(ReciprocalKernel.class).execute(data, result.data);
@@ -357,6 +455,24 @@ public class Tensor implements Cloneable {
 
 	protected float selectPrecision(float otherPrecision) {
 		return precision < otherPrecision ? precision : otherPrecision;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof Tensor)) {
+			return false;
+		}
+		Tensor other = (Tensor) obj;
+		if (!shape.equals(other.shape)) {
+			return false;
+		}
+		return kernel(EqualKernel.class).execute(selectPrecision(other.precision), this.data, other.data);
 	}
 
 	@Override
