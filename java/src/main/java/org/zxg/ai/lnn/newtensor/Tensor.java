@@ -17,10 +17,19 @@ import org.zxg.ai.lnn.newtensor.kernel.ConstantKernel;
 import org.zxg.ai.lnn.newtensor.kernel.DivideKernel;
 import org.zxg.ai.lnn.newtensor.kernel.DivideValueKernel;
 import org.zxg.ai.lnn.newtensor.kernel.EqualKernel;
+import org.zxg.ai.lnn.newtensor.kernel.LogarithmKernel;
+import org.zxg.ai.lnn.newtensor.kernel.MultiplyKernel;
+import org.zxg.ai.lnn.newtensor.kernel.MultiplyValueKernel;
+import org.zxg.ai.lnn.newtensor.kernel.NaturalExponentiationKernel;
+import org.zxg.ai.lnn.newtensor.kernel.NaturalLogarithmKernel;
 import org.zxg.ai.lnn.newtensor.kernel.NegativeKernel;
+import org.zxg.ai.lnn.newtensor.kernel.PowerKernel;
+import org.zxg.ai.lnn.newtensor.kernel.PowerValueKernel;
+import org.zxg.ai.lnn.newtensor.kernel.ProductKernel;
 import org.zxg.ai.lnn.newtensor.kernel.ReciprocalKernel;
 import org.zxg.ai.lnn.newtensor.kernel.ReluKernel;
 import org.zxg.ai.lnn.newtensor.kernel.SignKernel;
+import org.zxg.ai.lnn.newtensor.kernel.VectorProductKernel;
 import org.zxg.ai.lnn.opencl.Device;
 import org.zxg.ai.lnn.opencl.FloatArray;
 import org.zxg.ai.lnn.opencl.IntArray;
@@ -69,7 +78,11 @@ public class Tensor implements Cloneable {
 	}
 
 	public Tensor(Device device, int... shape) {
-		precision = DEFAULT_PRECISION;
+		this(DEFAULT_PRECISION, device, shape);
+	}
+
+	public Tensor(float precision, Device device, int... shape) {
+		this.precision = precision;
 		this.device = device;
 		this.shape = new IntArray(shape);
 		ShapeInfo info = ShapeInfo.create(shape);
@@ -82,7 +95,11 @@ public class Tensor implements Cloneable {
 	}
 
 	public Tensor(Device device, IntArray shape) {
-		precision = DEFAULT_PRECISION;
+		this(DEFAULT_PRECISION, device, shape);
+	}
+
+	public Tensor(float precision, Device device, IntArray shape) {
+		this.precision = precision;
 		this.device = device;
 		this.shape = shape;
 		ShapeInfo info = ShapeInfo.create(shape);
@@ -95,7 +112,11 @@ public class Tensor implements Cloneable {
 	}
 
 	public Tensor(Device device, float[] data, int... shape) {
-		precision = DEFAULT_PRECISION;
+		this(DEFAULT_PRECISION, device, data, shape);
+	}
+
+	public Tensor(float precision, Device device, float[] data, int... shape) {
+		this.precision = precision;
 		this.device = device;
 		this.shape = new IntArray(shape);
 		ShapeInfo info = ShapeInfo.create(shape);
@@ -111,7 +132,11 @@ public class Tensor implements Cloneable {
 	}
 
 	public Tensor(Device device, FloatArray data, IntArray shape) {
-		precision = DEFAULT_PRECISION;
+		this(DEFAULT_PRECISION, device, data, shape);
+	}
+
+	public Tensor(float precision, Device device, FloatArray data, IntArray shape) {
+		this.precision = precision;
 		this.device = device;
 		this.shape = shape;
 		ShapeInfo info = ShapeInfo.create(shape);
@@ -269,7 +294,7 @@ public class Tensor implements Cloneable {
 				shape[i] = end - begin;
 			}
 		}
-		Tensor result = new Tensor(shape);
+		Tensor result = new Tensor(precision, device, shape);
 		kernel(AxisSliceKernel.class).execute(axis, begin, this, result);
 		return result;
 	}
@@ -309,7 +334,7 @@ public class Tensor implements Cloneable {
 	}
 
 	public final Tensor like() {
-		return new Tensor(shape.clone());
+		return new Tensor(precision, device, shape.clone());
 	}
 
 	public final Tensor zerosLike() {
@@ -330,7 +355,7 @@ public class Tensor implements Cloneable {
 				throw new ShapeException();
 			}
 		}
-		Tensor result = new Tensor(shape);
+		Tensor result = new Tensor(precision, device, shape);
 		kernel(BroadcastKernel.class).execute(this, result);
 		return result;
 	}
@@ -417,26 +442,39 @@ public class Tensor implements Cloneable {
 
 	public final Tensor add(Tensor other) {
 		checkSameShape(other);
-		Tensor result = new Tensor(shape);
+		Tensor result = like();
 		kernel(AddKernel.class).execute(data, other.data, result.data);
 		return result;
 	}
 
 	public final Tensor add(float value) {
-		Tensor result = new Tensor(shape);
+		Tensor result = like();
 		kernel(AddValueKernel.class).execute(data, value, result.data);
+		return result;
+	}
+
+	public final Tensor mul(Tensor other) {
+		checkSameShape(other);
+		Tensor result = like();
+		kernel(MultiplyKernel.class).execute(data, other.data, result.data);
+		return result;
+	}
+
+	public final Tensor mul(float value) {
+		Tensor result = like();
+		kernel(MultiplyValueKernel.class).execute(data, value, result.data);
 		return result;
 	}
 
 	public final Tensor div(Tensor other) {
 		checkSameShape(other);
-		Tensor result = new Tensor(shape);
+		Tensor result = like();
 		kernel(DivideKernel.class).execute(data, other.data, result.data);
 		return result;
 	}
 
 	public final Tensor div(float value) {
-		Tensor result = new Tensor(shape);
+		Tensor result = like();
 		kernel(DivideValueKernel.class).execute(data, value, result.data);
 		return result;
 	}
@@ -444,6 +482,66 @@ public class Tensor implements Cloneable {
 	public final Tensor reciprocal() {
 		Tensor result = like();
 		kernel(ReciprocalKernel.class).execute(data, result.data);
+		return result;
+	}
+
+	public final Tensor dot(Tensor other) {
+		if (this.shape.length == 0) {
+			return other.mul(this.data.get(0));
+		} else if (other.shape.length == 0) {
+			return this.mul(other.data.get(0));
+		} else {
+			if (this.shape.get(this.shape.length - 1) != other.shape.get(0)) {
+				throw new ShapeException();
+			}
+			if (this.shape.length == 1 && other.shape.length == 1) {
+				Tensor result = new Tensor(precision, device, new IntArray(0));
+				kernel(VectorProductKernel.class).execute(this, other, result);
+				return result;
+			} else {
+				IntArray resultShape = new IntArray(this.shape.length + other.shape.length - 2);
+				if (this.shape.length > 1) {
+					IntArray.copy(this.shape, 0, resultShape, 0, this.shape.length - 1);
+				}
+				if (other.shape.length > 1) {
+					IntArray.copy(other.shape, 1, resultShape, this.shape.length - 1, other.shape.length - 1);
+				}
+				Tensor result = new Tensor(precision, device, resultShape);
+				kernel(ProductKernel.class).execute(this, other, result);
+				return result;
+			}
+		}
+	}
+
+	public final Tensor exp() {
+		Tensor result = like();
+		kernel(NaturalExponentiationKernel.class).execute(data, result.data);
+		return result;
+	}
+
+	public final Tensor pow(Tensor exponent) {
+		checkSameShape(exponent);
+		Tensor result = like();
+		kernel(PowerKernel.class).execute(data, exponent.data, result.data);
+		return result;
+	}
+
+	public final Tensor pow(float exponent) {
+		Tensor result = like();
+		kernel(PowerValueKernel.class).execute(data, exponent, result.data);
+		return result;
+	}
+
+	public final Tensor ln() {
+		Tensor result = like();
+		kernel(NaturalLogarithmKernel.class).execute(data, result.data);
+		return result;
+	}
+
+	public final Tensor log(Tensor antilogarithm) {
+		checkSameShape(antilogarithm);
+		Tensor result = like();
+		kernel(LogarithmKernel.class).execute(data, antilogarithm.data, result.data);
 		return result;
 	}
 
