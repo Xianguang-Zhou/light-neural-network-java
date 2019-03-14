@@ -15,11 +15,11 @@ import org.zxg.ai.lnn.opencl.Range1D;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class ArangeKernel extends Kernel {
+public class SubtractValueKernel extends Kernel {
 
-	public void execute(float start, float stop, float step, int repeat, FloatArray result) {
+	public void execute(FloatArray left, float right, FloatArray result) {
 		Calling c = call();
-		c.arg(start).arg(stop).arg(step).arg(repeat).inOut(result);
+		c.in(left).arg(right).out(result);
 		c.pass(new Range1D(result.length));
 		c.execute();
 	}

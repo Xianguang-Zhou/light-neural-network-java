@@ -7,6 +7,7 @@
  */
 package org.zxg.ai.lnn.newtensor.kernel;
 
+import org.zxg.ai.lnn.newtensor.Tensor;
 import org.zxg.ai.lnn.opencl.Calling;
 import org.zxg.ai.lnn.opencl.FloatArray;
 import org.zxg.ai.lnn.opencl.Kernel;
@@ -15,12 +16,15 @@ import org.zxg.ai.lnn.opencl.Range1D;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class ArangeKernel extends Kernel {
+public class SumAxisKernel extends Kernel {
 
-	public void execute(float start, float stop, float step, int repeat, FloatArray result) {
+	public void execute(int axis, Tensor source, Tensor result) {
+		FloatArray resultData = result.flatData();
 		Calling c = call();
-		c.arg(start).arg(stop).arg(step).arg(repeat).inOut(result);
-		c.pass(new Range1D(result.length));
+		c.arg(axis).arg(source.shape().get(axis));
+		c.in(source.dimSizes()).in(result.dimSizes());
+		c.in(source.flatData()).out(resultData);
+		c.pass(new Range1D(resultData.length));
 		c.execute();
 	}
 }
