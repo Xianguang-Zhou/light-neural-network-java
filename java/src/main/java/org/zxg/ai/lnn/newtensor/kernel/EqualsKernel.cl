@@ -9,11 +9,9 @@ __kernel void run(
 		const float precision,
 		__constant float* left,
 		__constant float* right,
-		__global float* result) {
+		__global short* result) {
 	size_t gid = get_global_id(0);
 	if (fabs(left[gid] - right[gid]) > precision) {
-		result[gid] = 0;
-	} else {
-		result[gid] = 1;
+		result[0] = 1;
 	}
 }

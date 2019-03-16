@@ -11,7 +11,7 @@ __kernel void run(
 		__constant float* right,
 		__global float* result) {
 	size_t gid = get_global_id(0);
-	if (fabs(left[gid] - right[gid]) > precision) {
+	if (left[gid] - right[gid] > precision) {
 		result[gid] = 0;
 	} else {
 		result[gid] = 1;

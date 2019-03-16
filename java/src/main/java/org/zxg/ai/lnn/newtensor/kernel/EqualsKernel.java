@@ -11,16 +11,19 @@ import org.zxg.ai.lnn.opencl.Calling;
 import org.zxg.ai.lnn.opencl.FloatArray;
 import org.zxg.ai.lnn.opencl.Kernel;
 import org.zxg.ai.lnn.opencl.Range1D;
+import org.zxg.ai.lnn.opencl.ShortArray;
 
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class EqualKernel extends Kernel {
+public class EqualsKernel extends Kernel {
 
-	public void execute(float precision, FloatArray left, FloatArray right, FloatArray result) {
+	public boolean execute(float precision, FloatArray left, FloatArray right) {
+		ShortArray result = new ShortArray(new short[] { 0 });
 		Calling c = call();
-		c.arg(precision).in(left).in(right).out(result);
-		c.pass(new Range1D(result.length));
+		c.arg(precision).in(left).in(right).inOut(result);
+		c.pass(new Range1D(left.length));
 		c.execute();
+		return 0 == result.get(0);
 	}
 }

@@ -15,7 +15,7 @@ import org.zxg.ai.lnn.opencl.Range1D;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class EqualKernel extends Kernel {
+public class LesserEqualKernel extends Kernel {
 
 	public void execute(float precision, FloatArray left, FloatArray right, FloatArray result) {
 		Calling c = call();

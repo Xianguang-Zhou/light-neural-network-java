@@ -17,12 +17,16 @@ import org.zxg.ai.lnn.newtensor.kernel.ConstantKernel;
 import org.zxg.ai.lnn.newtensor.kernel.DivideKernel;
 import org.zxg.ai.lnn.newtensor.kernel.DivideValueKernel;
 import org.zxg.ai.lnn.newtensor.kernel.EqualKernel;
+import org.zxg.ai.lnn.newtensor.kernel.EqualsKernel;
+import org.zxg.ai.lnn.newtensor.kernel.LesserEqualKernel;
+import org.zxg.ai.lnn.newtensor.kernel.LesserKernel;
 import org.zxg.ai.lnn.newtensor.kernel.LogarithmKernel;
 import org.zxg.ai.lnn.newtensor.kernel.MultiplyKernel;
 import org.zxg.ai.lnn.newtensor.kernel.MultiplyValueKernel;
 import org.zxg.ai.lnn.newtensor.kernel.NaturalExponentiationKernel;
 import org.zxg.ai.lnn.newtensor.kernel.NaturalLogarithmKernel;
 import org.zxg.ai.lnn.newtensor.kernel.NegativeKernel;
+import org.zxg.ai.lnn.newtensor.kernel.NotEqualKernel;
 import org.zxg.ai.lnn.newtensor.kernel.PowerKernel;
 import org.zxg.ai.lnn.newtensor.kernel.PowerValueKernel;
 import org.zxg.ai.lnn.newtensor.kernel.ProductKernel;
@@ -672,10 +676,6 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
-	protected float selectPrecision(float otherPrecision) {
-		return precision < otherPrecision ? precision : otherPrecision;
-	}
-
 	public final Tensor sumAxis(int axis) {
 		if (1 == this.data.length) {
 			return clone();
@@ -705,6 +705,46 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
+	protected float selectPrecision(float otherPrecision) {
+		return precision < otherPrecision ? precision : otherPrecision;
+	}
+
+	public final Tensor lesser(Tensor other) {
+		checkSameShape(other);
+		Tensor result = like();
+		kernel(LesserKernel.class).execute(selectPrecision(other.precision), this.data, other.data, result.data);
+		return result;
+	}
+
+	public final Tensor lesserEqual(Tensor other) {
+		checkSameShape(other);
+		Tensor result = like();
+		kernel(LesserEqualKernel.class).execute(selectPrecision(other.precision), this.data, other.data, result.data);
+		return result;
+	}
+
+	public final Tensor greater(Tensor other) {
+		return other.lesser(this);
+	}
+
+	public final Tensor greaterEqual(Tensor other) {
+		return other.lesserEqual(this);
+	}
+
+	public final Tensor equal(Tensor other) {
+		checkSameShape(other);
+		Tensor result = like();
+		kernel(EqualKernel.class).execute(selectPrecision(other.precision), this.data, other.data, result.data);
+		return result;
+	}
+
+	public final Tensor notEqual(Tensor other) {
+		checkSameShape(other);
+		Tensor result = like();
+		kernel(NotEqualKernel.class).execute(selectPrecision(other.precision), this.data, other.data, result.data);
+		return result;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -720,7 +760,7 @@ public class Tensor implements Cloneable {
 		if (!shape.equals(other.shape)) {
 			return false;
 		}
-		return kernel(EqualKernel.class).execute(selectPrecision(other.precision), this.data, other.data);
+		return kernel(EqualsKernel.class).execute(selectPrecision(other.precision), this.data, other.data);
 	}
 
 	@Override
