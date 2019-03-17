@@ -7,8 +7,7 @@
  */
 package org.zxg.ai.lnn.autograd;
 
-import java.util.Arrays;
-
+import org.zxg.ai.lnn.opencl.IntArray;
 import org.zxg.ai.lnn.tensor.Tensor;
 
 /**
@@ -45,12 +44,12 @@ final class LeftDotComputation extends Computation {
 		} else {
 			int axisLengthProduct = 1;
 			while (tensor.ndim() > newNdim) {
-				int[] tensorShape = tensor.shape();
+				IntArray tensorShape = tensor.shape();
 				if (isProductGradient) {
-					axisLengthProduct *= tensorShape[0];
+					axisLengthProduct *= tensorShape.get(0);
 				}
 				tensor = tensor.sumAxis(0);
-				tensor.setShape(Arrays.copyOfRange(tensorShape, 1, tensorShape.length));
+				tensor.setShape(IntArray.copyOfRange(tensorShape, 1, tensorShape.length));
 			}
 			if (axisLengthProduct != 1) {
 				tensor = tensor.mul(1.0f / axisLengthProduct);

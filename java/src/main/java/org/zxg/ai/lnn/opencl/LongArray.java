@@ -36,6 +36,16 @@ public class LongArray extends BufferArray {
 		}
 	}
 
+	public static LongArray copyOfRange(LongArray original, int from, int to) {
+		int newLength = to - from;
+		if (newLength < 0) {
+			throw new IllegalArgumentException(from + " > " + to);
+		}
+		LongArray newArray = new LongArray(newLength);
+		copy(original, from, newArray, 0, Math.min(original.length - from, newLength));
+		return newArray;
+	}
+
 	public LongArray(int length) {
 		this.buffer = Buffers.newDirectLongBuffer(length);
 		this.length = length;

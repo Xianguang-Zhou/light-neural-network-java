@@ -32,12 +32,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.aparapi</groupId>
-			<artifactId>aparapi</artifactId>
-			<version>1.10.0</version>
-		</dependency>
-		
-		<dependency>
 			<groupId>org.jogamp.jocl</groupId>
 			<artifactId>jocl-main</artifactId>
 			<version>${jocl.version}</version>

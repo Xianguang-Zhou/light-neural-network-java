@@ -36,6 +36,16 @@ public class FloatArray extends BufferArray {
 		}
 	}
 
+	public static FloatArray copyOfRange(FloatArray original, int from, int to) {
+		int newLength = to - from;
+		if (newLength < 0) {
+			throw new IllegalArgumentException(from + " > " + to);
+		}
+		FloatArray newArray = new FloatArray(newLength);
+		copy(original, from, newArray, 0, Math.min(original.length - from, newLength));
+		return newArray;
+	}
+
 	public FloatArray(int length) {
 		this.buffer = Buffers.newDirectFloatBuffer(length);
 		this.length = length;

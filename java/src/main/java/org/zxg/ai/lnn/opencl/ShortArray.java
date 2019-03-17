@@ -36,6 +36,16 @@ public class ShortArray extends BufferArray {
 		}
 	}
 
+	public static ShortArray copyOfRange(ShortArray original, int from, int to) {
+		int newLength = to - from;
+		if (newLength < 0) {
+			throw new IllegalArgumentException(from + " > " + to);
+		}
+		ShortArray newArray = new ShortArray(newLength);
+		copy(original, from, newArray, 0, Math.min(original.length - from, newLength));
+		return newArray;
+	}
+
 	public ShortArray(int length) {
 		this.buffer = Buffers.newDirectShortBuffer(length);
 		this.length = length;

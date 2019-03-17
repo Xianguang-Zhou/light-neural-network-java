@@ -11,6 +11,7 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.zxg.ai.lnn.opencl.IntArray;
 import org.zxg.ai.lnn.tensor.Tensor;
 
 /**
@@ -125,9 +126,9 @@ public class Variable {
 
 			@Override
 			protected Tensor backward(Tensor forwardGradient) {
-				int[] oldShape = Variable.this.value.shape();
+				IntArray oldShape = Variable.this.value.shape();
 				for (int axis = 0; axis < oldShape.length; axis++) {
-					if (oldShape[axis] != shape[axis]) {
+					if (oldShape.get(axis) != shape[axis]) {
 						forwardGradient = forwardGradient.sumAxis(axis);
 					}
 				}

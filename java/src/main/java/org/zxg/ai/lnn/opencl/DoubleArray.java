@@ -36,6 +36,16 @@ public class DoubleArray extends BufferArray {
 		}
 	}
 
+	public static DoubleArray copyOfRange(DoubleArray original, int from, int to) {
+		int newLength = to - from;
+		if (newLength < 0) {
+			throw new IllegalArgumentException(from + " > " + to);
+		}
+		DoubleArray newArray = new DoubleArray(newLength);
+		copy(original, from, newArray, 0, Math.min(original.length - from, newLength));
+		return newArray;
+	}
+
 	public DoubleArray(int length) {
 		this.buffer = Buffers.newDirectDoubleBuffer(length);
 		this.length = length;

@@ -36,6 +36,16 @@ public class IntArray extends BufferArray {
 		}
 	}
 
+	public static IntArray copyOfRange(IntArray original, int from, int to) {
+		int newLength = to - from;
+		if (newLength < 0) {
+			throw new IllegalArgumentException(from + " > " + to);
+		}
+		IntArray newArray = new IntArray(newLength);
+		copy(original, from, newArray, 0, Math.min(original.length - from, newLength));
+		return newArray;
+	}
+
 	public IntArray(int length) {
 		this.buffer = Buffers.newDirectIntBuffer(length);
 		this.length = length;

@@ -7,6 +7,9 @@
  */
 package org.zxg.ai.lnn.tensor;
 
+import org.zxg.ai.lnn.tensor.kernel.NormalRandomKernel;
+import org.zxg.ai.lnn.tensor.kernel.UniformRandomKernel;
+
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
@@ -44,7 +47,7 @@ public class TensorRandom {
 
 	public final void uniform(float low, float high, Tensor t) {
 		nextSeed();
-		new UniformRandomKernel(seed, low, high, t.data).execute();
+		t.device().kernel(UniformRandomKernel.class).execute(MASK, MULTIPLIER, ADDEND, seed, low, high, t.flatData());
 	}
 
 	public final void normal(Tensor t) {
@@ -53,6 +56,7 @@ public class TensorRandom {
 
 	public final void normal(float mean, float standardDeviation, Tensor t) {
 		nextSeed();
-		new NormalRandomKernel(seed, mean, standardDeviation, t.data).execute();
+		t.device().kernel(NormalRandomKernel.class).execute(MASK, MULTIPLIER, ADDEND, seed, mean, standardDeviation,
+				t.flatData());
 	}
 }
