@@ -7,7 +7,10 @@
  */
 package org.zxg.ai.lnn.tensor;
 
+import org.zxg.ai.lnn.opencl.Device;
+import org.zxg.ai.lnn.opencl.IntArray;
 import org.zxg.ai.lnn.tensor.kernel.NormalRandomKernel;
+import org.zxg.ai.lnn.tensor.kernel.ShuffleIntKernel;
 import org.zxg.ai.lnn.tensor.kernel.UniformRandomKernel;
 
 /**
@@ -58,5 +61,10 @@ public class TensorRandom {
 		nextSeed();
 		t.device().kernel(NormalRandomKernel.class).execute(MASK, MULTIPLIER, ADDEND, seed, mean, standardDeviation,
 				t.flatData());
+	}
+
+	public final void shuffle(Device device, IntArray array) {
+		nextSeed();
+		device.kernel(ShuffleIntKernel.class).execute(MASK, MULTIPLIER, ADDEND, seed, array);
 	}
 }

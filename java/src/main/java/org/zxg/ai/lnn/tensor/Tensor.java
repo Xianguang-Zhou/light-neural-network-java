@@ -43,6 +43,7 @@ import org.zxg.ai.lnn.tensor.kernel.SquareRootKernel;
 import org.zxg.ai.lnn.tensor.kernel.SubtractKernel;
 import org.zxg.ai.lnn.tensor.kernel.SubtractValueKernel;
 import org.zxg.ai.lnn.tensor.kernel.SumAxisKernel;
+import org.zxg.ai.lnn.tensor.kernel.TakeKernel;
 import org.zxg.ai.lnn.tensor.kernel.TanhKernel;
 import org.zxg.ai.lnn.tensor.kernel.TransposeKernel;
 import org.zxg.ai.lnn.tensor.kernel.VectorProductKernel;
@@ -357,6 +358,28 @@ public class Tensor implements Cloneable {
 		kernel(SliceAssignKernel.class).execute(new IntArray(begin), value, this);
 	}
 
+	public final Tensor take(IntArray indexes) {
+		return take(0, indexes);
+	}
+
+	public final Tensor take(int axis, IntArray indexes) {
+		if (axis < 0 || axis >= this.shape.length) {
+			throw new DimException();
+		}
+		final int axisLength = this.shape.get(axis);
+		for (int i = 0; i < indexes.length; i++) {
+			int index = indexes.get(i);
+			if (index < 0 || index >= axisLength) {
+				throw new ShapeException();
+			}
+		}
+		IntArray shape = this.shape.clone();
+		shape.set(axis, indexes.length);
+		Tensor result = create(shape);
+		kernel(TakeKernel.class).execute(axis, indexes, this, result);
+		return result;
+	}
+
 	public final void setShape(int... shape) {
 		ShapeInfo info = ShapeInfo.create(shape);
 		if (info.size != data.length) {
@@ -458,6 +481,19 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
+	public final Tensor broadcastTo(IntArray shape) {
+		checkSameDim(this.shape, shape);
+		for (int i = 0; i < this.shape.length; i++) {
+			int length = this.shape.get(i);
+			if (length != shape.get(i) && length != 1) {
+				throw new ShapeException();
+			}
+		}
+		Tensor result = create(shape);
+		kernel(BroadcastKernel.class).execute(this, result);
+		return result;
+	}
+
 	public final Tensor expandDims(int axis, int times) {
 		if (axis < 0 || axis > this.shape.length || times < 1) {
 			throw new IndexOutOfBoundsException();
@@ -502,6 +538,10 @@ public class Tensor implements Cloneable {
 
 	public final void zeros() {
 		constant(0);
+	}
+
+	public final void arange() {
+		arange(data.length);
 	}
 
 	public final void arange(float stop) {

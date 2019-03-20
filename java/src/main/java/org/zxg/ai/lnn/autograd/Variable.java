@@ -137,6 +137,22 @@ public class Variable {
 		});
 	}
 
+	public final Variable broadcastTo(IntArray shape) {
+		return new Variable(value.broadcastTo(shape), new Computation(this) {
+
+			@Override
+			protected Tensor backward(Tensor forwardGradient) {
+				IntArray oldShape = Variable.this.value.shape();
+				for (int axis = 0; axis < oldShape.length; axis++) {
+					if (oldShape.get(axis) != shape.get(axis)) {
+						forwardGradient = forwardGradient.sumAxis(axis);
+					}
+				}
+				return forwardGradient;
+			}
+		});
+	}
+
 	public final Variable negative() {
 		return new Variable(value.negative(), new Computation(this) {
 

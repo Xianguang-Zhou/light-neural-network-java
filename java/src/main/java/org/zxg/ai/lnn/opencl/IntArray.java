@@ -10,6 +10,8 @@ package org.zxg.ai.lnn.opencl;
 import java.nio.Buffer;
 import java.nio.IntBuffer;
 
+import org.zxg.ai.lnn.opencl.kernel.ArangeIntKernel;
+
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
@@ -168,5 +170,25 @@ public class IntArray extends BufferArray {
 		}
 		builder.append(']');
 		return builder.toString();
+	}
+
+	public void arange(Device device) {
+		arange(device, length);
+	}
+
+	public void arange(Device device, int stop) {
+		arange(device, 0, stop);
+	}
+
+	public void arange(Device device, int start, int stop) {
+		arange(device, start, stop, 1);
+	}
+
+	public void arange(Device device, int start, int stop, int step) {
+		arange(device, start, stop, step, 1);
+	}
+
+	public void arange(Device device, int start, int stop, int step, int repeat) {
+		device.kernel(ArangeIntKernel.class).execute(start, stop, step, repeat, this);
 	}
 }
