@@ -16,7 +16,7 @@ import org.zxg.ai.lnn.autograd.Variable;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public abstract class StatelessLayer extends Layer {
+public class StatelessLayer extends Layer {
 
 	@Override
 	public void loadState(Map<String, Variable> state, boolean strict) {
@@ -47,15 +47,14 @@ public abstract class StatelessLayer extends Layer {
 	}
 
 	@Override
-	public boolean training() {
-		return false;
-	}
-
-	@Override
-	public void training(boolean mode) {
-	}
-
-	@Override
 	public void zeroGradient() {
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(getClass().getSimpleName());
+		builder.append("()");
+		return builder.toString();
 	}
 }

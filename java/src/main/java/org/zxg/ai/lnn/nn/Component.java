@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
 
+import org.zxg.ai.lnn.autograd.Constant;
 import org.zxg.ai.lnn.autograd.Variable;
+import org.zxg.ai.lnn.tensor.Tensor;
 
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
@@ -29,7 +31,22 @@ public interface Component {
 
 	Iterable<Component> components();
 
-	Variable[] forward(Variable... input);
+	default Tensor[] forward(Tensor... input) {
+		Variable[] variables = new Variable[input.length];
+		for (int i = 0; i < input.length; i++) {
+			variables[i] = new Constant(input[i]);
+		}
+		variables = forward(variables);
+		Tensor[] output = new Tensor[variables.length];
+		for (int i = 0; i < output.length; i++) {
+			output[i] = variables[i].value();
+		}
+		return output;
+	}
+
+	default Variable[] forward(Variable... input) {
+		return input;
+	}
 
 	default void loadState(Map<String, Variable> state) {
 		loadState(state, true);
@@ -90,10 +107,6 @@ public interface Component {
 	default Map<String, Variable> state(String prefix) {
 		return state(new LinkedHashMap<>(), prefix);
 	}
-
-	boolean training();
-
-	void training(boolean mode);
 
 	void zeroGradient();
 }

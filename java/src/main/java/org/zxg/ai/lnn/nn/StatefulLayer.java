@@ -17,10 +17,9 @@ import org.zxg.ai.lnn.autograd.Variable;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public abstract class StatefulLayer extends Layer {
+public class StatefulLayer extends Layer {
 
-	private Map<String, Variable> state = new LinkedHashMap<>();
-	private boolean training = true;
+	protected Map<String, Variable> state = new LinkedHashMap<>();
 
 	@Override
 	public void loadState(Map<String, Variable> state, boolean strict) {
@@ -74,19 +73,22 @@ public abstract class StatefulLayer extends Layer {
 	}
 
 	@Override
-	public boolean training() {
-		return training;
-	}
-
-	@Override
-	public void training(boolean mode) {
-		this.training = mode;
-	}
-
-	@Override
 	public void zeroGradient() {
 		for (Variable parameter : state.values()) {
 			parameter.zeroGradient();
 		}
+	}
+
+	protected void appendExtraRepresentation(StringBuilder builder) {
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(getClass().getSimpleName());
+		builder.append('(');
+		appendExtraRepresentation(builder);
+		builder.append(')');
+		return builder.toString();
 	}
 }

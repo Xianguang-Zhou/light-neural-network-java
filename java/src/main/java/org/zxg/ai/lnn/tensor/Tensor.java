@@ -60,6 +60,10 @@ public class Tensor implements Cloneable {
 		DEFAULT_PRECISION = Math.abs(precision);
 	}
 
+	public static float defaultPrecision() {
+		return DEFAULT_PRECISION;
+	}
+
 	public static void defaultDevice(Device device) {
 		DEFAULT_DEVICE = device;
 	}

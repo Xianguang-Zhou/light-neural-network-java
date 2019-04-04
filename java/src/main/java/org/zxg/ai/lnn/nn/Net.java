@@ -20,12 +20,11 @@ import org.zxg.ai.lnn.autograd.Variable;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public abstract class Net implements Component {
+public class Net implements Component {
 
 	private static final Pattern dotPattern = Pattern.compile("\\.");
 
-	private Map<String, Component> children = new LinkedHashMap<>();
-	private boolean training = true;
+	protected Map<String, Component> children = new LinkedHashMap<>();
 
 	@Override
 	public void addComponent(String name, Component component) {
@@ -171,22 +170,41 @@ public abstract class Net implements Component {
 	}
 
 	@Override
-	public boolean training() {
-		return training;
-	}
-
-	@Override
-	public void training(boolean mode) {
-		this.training = mode;
-		for (Component child : children.values()) {
-			child.training(mode);
-		}
-	}
-
-	@Override
 	public void zeroGradient() {
 		for (Component child : children.values()) {
 			child.zeroGradient();
 		}
+	}
+
+	private String toString(int indent) {
+		StringBuilder builder = new StringBuilder();
+		builder.append(getClass().getSimpleName());
+		builder.append("(\n");
+		for (Entry<String, Component> entry : children.entrySet()) {
+			for (int i = 0; i < indent; i++) {
+				builder.append(' ');
+			}
+			builder.append("  (");
+			String childName = entry.getKey();
+			builder.append(childName);
+			builder.append("): ");
+			Component child = entry.getValue();
+			if (child instanceof Net) {
+				builder.append(((Net) child).toString(indent + childName.length() + 6));
+			} else {
+				builder.append(child);
+			}
+			builder.append('\n');
+		}
+		for (int i = 0; i < indent; i++) {
+			builder.append(' ');
+		}
+		builder.append(')');
+		return builder.toString();
+	}
+
+	@Override
+	public String toString() {
+		return toString(0);
 	}
 }
