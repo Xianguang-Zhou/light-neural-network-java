@@ -61,15 +61,15 @@ public class Program implements Closeable {
 		init(ctx, in);
 	}
 
-	protected final void init(CLContext ctx) throws LnnIOException, LnnCLException {
+	protected void init(CLContext ctx) throws LnnIOException, LnnCLException {
 		init(ctx, this.getClass().getSimpleName() + ".cl");
 	}
 
-	protected final void init(CLContext ctx, String name) throws LnnIOException, LnnCLException {
+	protected void init(CLContext ctx, String name) throws LnnIOException, LnnCLException {
 		init(ctx, this.getClass().getResourceAsStream(name));
 	}
 
-	protected final void init(CLContext ctx, InputStream in) throws LnnIOException, LnnCLException {
+	protected void init(CLContext ctx, InputStream in) throws LnnIOException, LnnCLException {
 		try {
 			this.program = ctx.createProgram(in);
 			this.program.build();

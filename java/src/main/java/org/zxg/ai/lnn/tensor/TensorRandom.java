@@ -32,38 +32,38 @@ public class TensorRandom {
 		seed(seed);
 	}
 
-	protected final long seed() {
+	protected long seed() {
 		return seed;
 	}
 
-	public final void seed(long seed) {
+	public void seed(long seed) {
 		this.seed = (seed ^ MULTIPLIER) & MASK;
 	}
 
-	protected final void nextSeed() {
+	protected void nextSeed() {
 		seed = (seed * MULTIPLIER + ADDEND) & MASK;
 	}
 
-	public final void uniform(Tensor t) {
+	public void uniform(Tensor t) {
 		uniform(0, 1, t);
 	}
 
-	public final void uniform(float low, float high, Tensor t) {
+	public void uniform(float low, float high, Tensor t) {
 		nextSeed();
 		t.device().kernel(UniformRandomKernel.class).execute(MASK, MULTIPLIER, ADDEND, seed, low, high, t.flatData());
 	}
 
-	public final void normal(Tensor t) {
+	public void normal(Tensor t) {
 		normal(0, 1, t);
 	}
 
-	public final void normal(float mean, float standardDeviation, Tensor t) {
+	public void normal(float mean, float standardDeviation, Tensor t) {
 		nextSeed();
 		t.device().kernel(NormalRandomKernel.class).execute(MASK, MULTIPLIER, ADDEND, seed, mean, standardDeviation,
 				t.flatData());
 	}
 
-	public final void shuffle(Device device, IntArray array) {
+	public void shuffle(Device device, IntArray array) {
 		nextSeed();
 		device.kernel(ShuffleIntKernel.class).execute(MASK, MULTIPLIER, ADDEND, seed, array);
 	}

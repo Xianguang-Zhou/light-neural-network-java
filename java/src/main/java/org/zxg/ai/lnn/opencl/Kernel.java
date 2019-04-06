@@ -19,19 +19,19 @@ public abstract class Kernel implements Closeable {
 	private CLDevice device;
 	private Program program;
 
-	final void init(CLDevice device) {
+	void init(CLDevice device) {
 		this.device = device;
 		Class<?> type = this.getClass();
 		String fileName = type.getSimpleName() + ".cl";
 		program = new Program(device.getContext(), type.getResourceAsStream(fileName));
 	}
 
-	protected final Calling call() {
+	protected Calling call() {
 		return program.call().at(device);
 	}
 
 	@Override
-	public final void close() {
+	public void close() {
 		program.close();
 	}
 }

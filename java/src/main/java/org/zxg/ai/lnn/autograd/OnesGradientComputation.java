@@ -19,7 +19,7 @@ public class OnesGradientComputation extends Computation {
 	}
 
 	@Override
-	protected final Tensor backward(Tensor forwardGradient) {
+	protected Tensor backward(Tensor forwardGradient) {
 		return forwardGradient;
 	}
 }

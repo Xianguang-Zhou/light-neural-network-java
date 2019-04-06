@@ -63,7 +63,7 @@ public class Variable {
 		}
 	}
 
-	public final void backward(Tensor gradient) {
+	public void backward(Tensor gradient) {
 		if (null == gradient) {
 			gradient = new Tensor(this.value.shape());
 			gradient.ones();
@@ -87,11 +87,11 @@ public class Variable {
 		}
 	}
 
-	public final void backward() {
+	public void backward() {
 		backward(null);
 	}
 
-	public final Variable reshape(int... shape) {
+	public Variable reshape(int... shape) {
 		return new Variable(value.reshape(shape), new Computation(this) {
 
 			@Override
@@ -101,7 +101,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable expandDims(int axis, int times) {
+	public Variable expandDims(int axis, int times) {
 		return new Variable(value.expandDims(axis, times), new Computation(this) {
 
 			@Override
@@ -111,7 +111,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable contractDims(int axis, int times) {
+	public Variable contractDims(int axis, int times) {
 		return new Variable(value.contractDims(axis, times), new Computation(this) {
 
 			@Override
@@ -121,7 +121,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable broadcastTo(int... shape) {
+	public Variable broadcastTo(int... shape) {
 		return new Variable(value.broadcastTo(shape), new Computation(this) {
 
 			@Override
@@ -137,7 +137,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable broadcastTo(IntArray shape) {
+	public Variable broadcastTo(IntArray shape) {
 		return new Variable(value.broadcastTo(shape), new Computation(this) {
 
 			@Override
@@ -153,7 +153,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable negative() {
+	public Variable negative() {
 		return new Variable(value.negative(), new Computation(this) {
 
 			@Override
@@ -163,7 +163,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable abs() {
+	public Variable abs() {
 		return new Variable(value.abs(), new Computation(this) {
 
 			@Override
@@ -173,28 +173,28 @@ public class Variable {
 		});
 	}
 
-	public final Variable add(float constant) {
+	public Variable add(float constant) {
 		return new Variable(value.add(constant), new OnesGradientComputation(this));
 	}
 
-	public final Variable add(Tensor constant) {
+	public Variable add(Tensor constant) {
 		return new Variable(value.add(constant), new OnesGradientComputation(this));
 	}
 
-	public final Variable add(Variable other) {
+	public Variable add(Variable other) {
 		return new Variable(this.value.add(other.value), new OnesGradientComputation(this),
 				new OnesGradientComputation(other));
 	}
 
-	public final Variable sub(float constant) {
+	public Variable sub(float constant) {
 		return new Variable(value.sub(constant), new OnesGradientComputation(this));
 	}
 
-	public final Variable sub(Tensor constant) {
+	public Variable sub(Tensor constant) {
 		return new Variable(value.sub(constant), new OnesGradientComputation(this));
 	}
 
-	public final Variable sub(Variable other) {
+	public Variable sub(Variable other) {
 		return new Variable(this.value.sub(other.value), new OnesGradientComputation(this), new Computation(other) {
 
 			@Override
@@ -204,7 +204,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable mul(float constant) {
+	public Variable mul(float constant) {
 		return new Variable(value.mul(constant), new Computation(this) {
 
 			@Override
@@ -214,7 +214,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable mul(Tensor constant) {
+	public Variable mul(Tensor constant) {
 		return new Variable(value.mul(constant), new Computation(this) {
 
 			@Override
@@ -224,7 +224,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable mul(Variable other) {
+	public Variable mul(Variable other) {
 		return new Variable(this.value.mul(other.value), new Computation(this) {
 
 			@Override
@@ -240,7 +240,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable div(float constant) {
+	public Variable div(float constant) {
 		return new Variable(value.div(constant), new Computation(this) {
 
 			@Override
@@ -250,7 +250,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable div(Tensor constant) {
+	public Variable div(Tensor constant) {
 		return new Variable(value.div(constant), new Computation(this) {
 
 			@Override
@@ -260,7 +260,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable div(Variable other) {
+	public Variable div(Variable other) {
 		Tensor resultValue = this.value.div(other.value);
 		return new Variable(resultValue, new Computation(this) {
 
@@ -277,7 +277,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable reciprocal() {
+	public Variable reciprocal() {
 		Tensor resultValue = value.reciprocal();
 		return new Variable(resultValue, new Computation(this) {
 
@@ -288,7 +288,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable sqrt() {
+	public Variable sqrt() {
 		Tensor resultValue = value.sqrt();
 		return new Variable(resultValue, new Computation(this) {
 
@@ -299,7 +299,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable exp() {
+	public Variable exp() {
 		Tensor resultValue = value.exp();
 		return new Variable(resultValue, new Computation(this) {
 
@@ -310,7 +310,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable pow(float exponent) {
+	public Variable pow(float exponent) {
 		return new Variable(value.pow(exponent), new Computation(this) {
 
 			@Override
@@ -320,7 +320,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable pow(Tensor exponent) {
+	public Variable pow(Tensor exponent) {
 		return new Variable(value.pow(exponent), new Computation(this) {
 
 			@Override
@@ -330,7 +330,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable pow(Variable exponent) {
+	public Variable pow(Variable exponent) {
 		Tensor resultValue = this.value.pow(exponent.value);
 		return new Variable(resultValue, new Computation(this) {
 
@@ -347,7 +347,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable ln() {
+	public Variable ln() {
 		return new Variable(value.ln(), new Computation(this) {
 
 			@Override
@@ -357,7 +357,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable log(Tensor antilogarithm) {
+	public Variable log(Tensor antilogarithm) {
 		Tensor resultValue = value.log(antilogarithm);
 		return new Variable(resultValue, new Computation(this) {
 
@@ -368,7 +368,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable log(Variable antilogarithm) {
+	public Variable log(Variable antilogarithm) {
 		Tensor resultValue = this.value.log(antilogarithm.value);
 		CachedComputation lnThis = new CachedComputation() {
 
@@ -392,7 +392,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable tanh() {
+	public Variable tanh() {
 		Tensor resultValue = value.tanh();
 		return new Variable(resultValue, new Computation(this) {
 
@@ -403,7 +403,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable relu() {
+	public Variable relu() {
 		Tensor resultValue = value.relu();
 		return new Variable(resultValue, new Computation(this) {
 
@@ -414,7 +414,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable transpose() {
+	public Variable transpose() {
 		return new Variable(this.value.transpose(), new Computation(this) {
 
 			@Override
@@ -424,7 +424,7 @@ public class Variable {
 		});
 	}
 
-	public final Variable transpose(int... permutation) {
+	public Variable transpose(int... permutation) {
 		return new Variable(this.value.transpose(permutation), new Computation(this) {
 
 			@Override
@@ -442,32 +442,32 @@ public class Variable {
 		});
 	}
 
-	public final Variable dot(Tensor constant) {
+	public Variable dot(Tensor constant) {
 		return new Variable(this.value.dot(constant), new RightDotComputation(this, constant));
 	}
 
-	public final Variable dot(Variable other) {
+	public Variable dot(Variable other) {
 		return new Variable(this.value.dot(other.value), new RightDotComputation(this, other.value),
 				new LeftDotComputation(other, this.value));
 	}
 
-	public final Tensor value() {
+	public Tensor value() {
 		return value;
 	}
 
-	public final void value(Tensor value) {
+	public void value(Tensor value) {
 		this.value = value;
 	}
 
-	public final Tensor gradient() {
+	public Tensor gradient() {
 		return gradient;
 	}
 
-	public final void zeroGradient() {
+	public void zeroGradient() {
 		gradient.zeros();
 	}
 
-	public final boolean requiresGradient() {
+	public boolean requiresGradient() {
 		return requiresGradient;
 	}
 }

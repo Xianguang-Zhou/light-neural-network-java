@@ -38,11 +38,11 @@ public class BufferArg extends Arg {
 		this.type = type;
 	}
 
-	public final boolean isIn() {
+	public boolean isIn() {
 		return type == Type.IN || type == Type.IN_OUT;
 	}
 
-	public final boolean isOut() {
+	public boolean isOut() {
 		return type == Type.OUT || type == Type.IN_OUT;
 	}
 

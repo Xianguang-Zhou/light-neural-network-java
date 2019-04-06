@@ -18,7 +18,7 @@ public abstract class CachedComputation {
 
 	protected abstract Tensor compute();
 
-	public final Tensor result() {
+	public Tensor result() {
 		if (null == cachedResult) {
 			cachedResult = compute();
 		}
