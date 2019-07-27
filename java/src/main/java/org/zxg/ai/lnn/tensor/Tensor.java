@@ -7,6 +7,7 @@
  */
 package org.zxg.ai.lnn.tensor;
 
+import org.zxg.ai.lnn.LnnException;
 import org.zxg.ai.lnn.opencl.Device;
 import org.zxg.ai.lnn.opencl.FloatArray;
 import org.zxg.ai.lnn.opencl.IntArray;
@@ -18,6 +19,7 @@ import org.zxg.ai.lnn.tensor.kernel.ArangeKernel;
 import org.zxg.ai.lnn.tensor.kernel.AxisSliceKernel;
 import org.zxg.ai.lnn.tensor.kernel.BroadcastKernel;
 import org.zxg.ai.lnn.tensor.kernel.ConstantKernel;
+import org.zxg.ai.lnn.tensor.kernel.CrossCorrelation1DKernel;
 import org.zxg.ai.lnn.tensor.kernel.DivideKernel;
 import org.zxg.ai.lnn.tensor.kernel.DivideValueKernel;
 import org.zxg.ai.lnn.tensor.kernel.EqualKernel;
@@ -666,6 +668,50 @@ public class Tensor implements Cloneable {
 				return result;
 			}
 		}
+	}
+
+	public Tensor corr1d(Tensor weight) {
+		return corr1d(weight, 1);
+	}
+
+	public Tensor corr1d(Tensor weight, int stride) {
+		return corr1d(weight, stride, 0);
+	}
+
+	public Tensor corr1d(Tensor weight, int stride, int padding) {
+		return corr1d(weight, stride, padding, 1);
+	}
+
+	public Tensor corr1d(Tensor weight, int stride, int padding, int dilation) {
+		return corr1d(weight, stride, padding, dilation, 1);
+	}
+
+	public Tensor corr1d(Tensor weight, int stride, int padding, int dilation, int groups) {
+		if (this.ndim() != 3 || weight.ndim() != 3) {
+			throw new DimException();
+		}
+		if (stride < 1) {
+			throw new LnnException();
+		}
+		if (padding < 0) {
+			throw new LnnException();
+		}
+		if (dilation < 1) {
+			throw new LnnException();
+		}
+		if (groups < 1) {
+			throw new LnnException();
+		}
+		if (this.shape.get(1) % groups != 0) {
+			throw new LnnException();
+		}
+		if (this.shape.get(1) / groups != weight.shape.get(1)) {
+			throw new LnnException();
+		}
+		Tensor result = create(this.shape.get(0), weight.shape.get(0),
+				(this.shape.get(2) + 2 * padding - dilation * (weight.shape.get(2) - 1) - 1) / stride + 1);
+		kernel(CrossCorrelation1DKernel.class).execute(this, weight, stride, padding, dilation, groups, result);
+		return result;
 	}
 
 	public Tensor sqrt() {
