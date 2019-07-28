@@ -4,10 +4,10 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.zxg.ai</groupId>
-	<artifactId>light-neural-network</artifactId>
+	<artifactId>light-neural-network-java</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
-	<url>https://github.com/Xianguang-Zhou/light_neural_network/tree/master/java</url>
+	<url>https://github.com/Xianguang-Zhou/light-neural-network-java</url>
 
 	<licenses>
 		<license>
