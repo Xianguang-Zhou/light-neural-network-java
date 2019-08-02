@@ -21,6 +21,7 @@ import org.zxg.ai.lnn.tensor.kernel.BroadcastKernel;
 import org.zxg.ai.lnn.tensor.kernel.ConstantKernel;
 import org.zxg.ai.lnn.tensor.kernel.CrossCorrelation1DKernel;
 import org.zxg.ai.lnn.tensor.kernel.CrossCorrelation2DKernel;
+import org.zxg.ai.lnn.tensor.kernel.CrossCorrelation3DKernel;
 import org.zxg.ai.lnn.tensor.kernel.DivideKernel;
 import org.zxg.ai.lnn.tensor.kernel.DivideValueKernel;
 import org.zxg.ai.lnn.tensor.kernel.EqualKernel;
@@ -51,6 +52,7 @@ import org.zxg.ai.lnn.tensor.kernel.TanhKernel;
 import org.zxg.ai.lnn.tensor.kernel.TransposeKernel;
 import org.zxg.ai.lnn.tensor.kernel.VectorProductKernel;
 import org.zxg.ai.lnn.tuple.IntTuple2;
+import org.zxg.ai.lnn.tuple.IntTuple3;
 
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
@@ -758,6 +760,52 @@ public class Tensor implements Cloneable {
 				(this.shape.get(2) + 2 * padding.e0 - dilation.e0 * (weight.shape.get(2) - 1) - 1) / stride.e0 + 1,
 				(this.shape.get(3) + 2 * padding.e1 - dilation.e1 * (weight.shape.get(3) - 1) - 1) / stride.e1 + 1);
 		kernel(CrossCorrelation2DKernel.class).execute(this, weight, stride, padding, dilation, groups, result);
+		return result;
+	}
+
+	public Tensor corr3d(Tensor weight) {
+		return corr3d(weight, new IntTuple3(1, 1, 1));
+	}
+
+	public Tensor corr3d(Tensor weight, IntTuple3 stride) {
+		return corr3d(weight, stride, new IntTuple3(0, 0, 0));
+	}
+
+	public Tensor corr3d(Tensor weight, IntTuple3 stride, IntTuple3 padding) {
+		return corr3d(weight, stride, padding, new IntTuple3(1, 1, 1));
+	}
+
+	public Tensor corr3d(Tensor weight, IntTuple3 stride, IntTuple3 padding, IntTuple3 dilation) {
+		return corr3d(weight, stride, padding, dilation, 1);
+	}
+
+	public Tensor corr3d(Tensor weight, IntTuple3 stride, IntTuple3 padding, IntTuple3 dilation, int groups) {
+		if (this.ndim() != 5 || weight.ndim() != 5) {
+			throw new DimException();
+		}
+		if (stride.anyoneLessThan(1)) {
+			throw new LnnException();
+		}
+		if (padding.anyoneLessThan(0)) {
+			throw new LnnException();
+		}
+		if (dilation.anyoneLessThan(1)) {
+			throw new LnnException();
+		}
+		if (groups < 1) {
+			throw new LnnException();
+		}
+		if (this.shape.get(1) % groups != 0) {
+			throw new LnnException();
+		}
+		if (this.shape.get(1) / groups != weight.shape.get(1)) {
+			throw new LnnException();
+		}
+		Tensor result = create(this.shape.get(0), weight.shape.get(0),
+				(this.shape.get(2) + 2 * padding.e0 - dilation.e0 * (weight.shape.get(2) - 1) - 1) / stride.e0 + 1,
+				(this.shape.get(3) + 2 * padding.e1 - dilation.e1 * (weight.shape.get(3) - 1) - 1) / stride.e1 + 1,
+				(this.shape.get(4) + 2 * padding.e2 - dilation.e2 * (weight.shape.get(4) - 1) - 1) / stride.e2 + 1);
+		kernel(CrossCorrelation3DKernel.class).execute(this, weight, stride, padding, dilation, groups, result);
 		return result;
 	}
 
