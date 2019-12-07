@@ -1,9 +1,18 @@
 /*
  * Copyright (c) 2019, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
  *
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.zxg.ai.lnn.tensor;
 
@@ -674,23 +683,23 @@ public class Tensor implements Cloneable {
 		}
 	}
 
-	public Tensor corr1d(Tensor weight) {
-		return corr1d(weight, 1);
+	public Tensor conv1d(Tensor weight) {
+		return conv1d(weight, 1);
 	}
 
-	public Tensor corr1d(Tensor weight, int stride) {
-		return corr1d(weight, stride, 0);
+	public Tensor conv1d(Tensor weight, int stride) {
+		return conv1d(weight, stride, 0);
 	}
 
-	public Tensor corr1d(Tensor weight, int stride, int padding) {
-		return corr1d(weight, stride, padding, 1);
+	public Tensor conv1d(Tensor weight, int stride, int padding) {
+		return conv1d(weight, stride, padding, 1);
 	}
 
-	public Tensor corr1d(Tensor weight, int stride, int padding, int dilation) {
-		return corr1d(weight, stride, padding, dilation, 1);
+	public Tensor conv1d(Tensor weight, int stride, int padding, int dilation) {
+		return conv1d(weight, stride, padding, dilation, 1);
 	}
 
-	public Tensor corr1d(Tensor weight, int stride, int padding, int dilation, int groups) {
+	public Tensor conv1d(Tensor weight, int stride, int padding, int dilation, int groups) {
 		if (this.ndim() != 3 || weight.ndim() != 3) {
 			throw new DimException();
 		}
@@ -718,23 +727,23 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
-	public Tensor corr2d(Tensor weight) {
-		return corr2d(weight, new IntTuple2(1, 1));
+	public Tensor conv2d(Tensor weight) {
+		return conv2d(weight, new IntTuple2(1, 1));
 	}
 
-	public Tensor corr2d(Tensor weight, IntTuple2 stride) {
-		return corr2d(weight, stride, new IntTuple2(0, 0));
+	public Tensor conv2d(Tensor weight, IntTuple2 stride) {
+		return conv2d(weight, stride, new IntTuple2(0, 0));
 	}
 
-	public Tensor corr2d(Tensor weight, IntTuple2 stride, IntTuple2 padding) {
-		return corr2d(weight, stride, padding, new IntTuple2(1, 1));
+	public Tensor conv2d(Tensor weight, IntTuple2 stride, IntTuple2 padding) {
+		return conv2d(weight, stride, padding, new IntTuple2(1, 1));
 	}
 
-	public Tensor corr2d(Tensor weight, IntTuple2 stride, IntTuple2 padding, IntTuple2 dilation) {
-		return corr2d(weight, stride, padding, dilation, 1);
+	public Tensor conv2d(Tensor weight, IntTuple2 stride, IntTuple2 padding, IntTuple2 dilation) {
+		return conv2d(weight, stride, padding, dilation, 1);
 	}
 
-	public Tensor corr2d(Tensor weight, IntTuple2 stride, IntTuple2 padding, IntTuple2 dilation, int groups) {
+	public Tensor conv2d(Tensor weight, IntTuple2 stride, IntTuple2 padding, IntTuple2 dilation, int groups) {
 		if (this.ndim() != 4 || weight.ndim() != 4) {
 			throw new DimException();
 		}
@@ -763,23 +772,23 @@ public class Tensor implements Cloneable {
 		return result;
 	}
 
-	public Tensor corr3d(Tensor weight) {
-		return corr3d(weight, new IntTuple3(1, 1, 1));
+	public Tensor conv3d(Tensor weight) {
+		return conv3d(weight, new IntTuple3(1, 1, 1));
 	}
 
-	public Tensor corr3d(Tensor weight, IntTuple3 stride) {
-		return corr3d(weight, stride, new IntTuple3(0, 0, 0));
+	public Tensor conv3d(Tensor weight, IntTuple3 stride) {
+		return conv3d(weight, stride, new IntTuple3(0, 0, 0));
 	}
 
-	public Tensor corr3d(Tensor weight, IntTuple3 stride, IntTuple3 padding) {
-		return corr3d(weight, stride, padding, new IntTuple3(1, 1, 1));
+	public Tensor conv3d(Tensor weight, IntTuple3 stride, IntTuple3 padding) {
+		return conv3d(weight, stride, padding, new IntTuple3(1, 1, 1));
 	}
 
-	public Tensor corr3d(Tensor weight, IntTuple3 stride, IntTuple3 padding, IntTuple3 dilation) {
-		return corr3d(weight, stride, padding, dilation, 1);
+	public Tensor conv3d(Tensor weight, IntTuple3 stride, IntTuple3 padding, IntTuple3 dilation) {
+		return conv3d(weight, stride, padding, dilation, 1);
 	}
 
-	public Tensor corr3d(Tensor weight, IntTuple3 stride, IntTuple3 padding, IntTuple3 dilation, int groups) {
+	public Tensor conv3d(Tensor weight, IntTuple3 stride, IntTuple3 padding, IntTuple3 dilation, int groups) {
 		if (this.ndim() != 5 || weight.ndim() != 5) {
 			throw new DimException();
 		}
