@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
+ * Copyright (c) 2019, 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -31,6 +31,7 @@ import org.zxg.ai.lnn.tensor.kernel.ConstantKernel;
 import org.zxg.ai.lnn.tensor.kernel.CrossCorrelation1DKernel;
 import org.zxg.ai.lnn.tensor.kernel.CrossCorrelation2DKernel;
 import org.zxg.ai.lnn.tensor.kernel.CrossCorrelation3DKernel;
+import org.zxg.ai.lnn.tensor.kernel.CrossCorrelationTranspose1DKernel;
 import org.zxg.ai.lnn.tensor.kernel.DivideKernel;
 import org.zxg.ai.lnn.tensor.kernel.DivideValueKernel;
 import org.zxg.ai.lnn.tensor.kernel.EqualKernel;
@@ -815,6 +816,58 @@ public class Tensor implements Cloneable {
 				(this.shape.get(3) + 2 * padding.e1 - dilation.e1 * (weight.shape.get(3) - 1) - 1) / stride.e1 + 1,
 				(this.shape.get(4) + 2 * padding.e2 - dilation.e2 * (weight.shape.get(4) - 1) - 1) / stride.e2 + 1);
 		kernel(CrossCorrelation3DKernel.class).execute(this, weight, stride, padding, dilation, groups, result);
+		return result;
+	}
+
+	public Tensor convTranspose1d(Tensor weight) {
+		return convTranspose1d(weight, 1);
+	}
+
+	public Tensor convTranspose1d(Tensor weight, int stride) {
+		return convTranspose1d(weight, stride, 0);
+	}
+
+	public Tensor convTranspose1d(Tensor weight, int stride, int padding) {
+		return convTranspose1d(weight, stride, padding, 0);
+	}
+
+	public Tensor convTranspose1d(Tensor weight, int stride, int padding, int outputPadding) {
+		return convTranspose1d(weight, stride, padding, outputPadding, 1);
+	}
+
+	public Tensor convTranspose1d(Tensor weight, int stride, int padding, int outputPadding, int groups) {
+		return convTranspose1d(weight, stride, padding, outputPadding, groups, 1);
+	}
+
+	public Tensor convTranspose1d(Tensor weight, int stride, int padding, int outputPadding, int groups, int dilation) {
+		if (this.ndim() != 3 || weight.ndim() != 3) {
+			throw new DimException();
+		}
+		if (stride < 1) {
+			throw new LnnException();
+		}
+		if (padding < 0) {
+			throw new LnnException();
+		}
+		if (outputPadding < 0) {
+			throw new LnnException();
+		}
+		if (groups < 1) {
+			throw new LnnException();
+		}
+		if (this.shape.get(1) % groups != 0) {
+			throw new LnnException();
+		}
+		if (dilation < 1) {
+			throw new LnnException();
+		}
+		if (this.shape.get(1) != weight.shape.get(0)) {
+			throw new LnnException();
+		}
+		Tensor result = create(this.shape.get(0), weight.shape.get(1) * groups, (this.shape.get(2) - 1) * stride
+				- 2 * padding + dilation * (weight.shape.get(2) - 1) + outputPadding + 1);
+		kernel(CrossCorrelationTranspose1DKernel.class).execute(this, weight, stride, padding, outputPadding, groups,
+				dilation, result);
 		return result;
 	}
 
