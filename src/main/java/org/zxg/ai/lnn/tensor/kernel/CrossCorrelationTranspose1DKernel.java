@@ -27,11 +27,10 @@ import org.zxg.ai.lnn.tensor.Tensor;
  */
 public class CrossCorrelationTranspose1DKernel extends Kernel {
 
-	public void execute(Tensor input, Tensor weight, int stride, int padding, int outputPadding, int groups,
-			int dilation, Tensor result) {
+	public void execute(Tensor input, Tensor weight, int stride, int padding, int groups, int dilation, Tensor result) {
 		FloatArray resultData = result.flatData();
 		Calling c = call();
-		c.arg(stride).arg(padding).arg(outputPadding).arg(groups).arg(dilation);
+		c.arg(stride).arg(padding).arg(groups).arg(dilation);
 		c.in(input.shape()).in(weight.shape()).in(result.shape());
 		c.in(input.dimSizes()).in(weight.dimSizes()).in(result.dimSizes());
 		c.in(input.flatData()).in(weight.flatData()).out(resultData);

@@ -28,7 +28,6 @@ int coordinateToGid(int* coordinate, __constant int* dimSizes) {
 __kernel void run(
 		const int stride,
 		const int padding,
-		const int outputPadding,
 		const int groups,
 		const int dilation,
 		__constant int* inputShape,
@@ -45,40 +44,38 @@ __kernel void run(
 	int resultCoordinate[3];
 	gidToCoordinate(gid, resultCoordinate, resultDimSizes);
 
+	const int resultGroupSize = resultShape[1] / groups;
+	const int groupNumber = resultCoordinate[1] / resultGroupSize;
+	const int resultGroupIndex = resultCoordinate[1] % resultGroupSize;
+	const int inputGroupSize = inputShape[1] / groups;
+
+	int inputCoordinate[3];
+	inputCoordinate[0] = resultCoordinate[0];
+	const int inputCoordinate1Base = groupNumber * inputGroupSize;
+	const int inputCoordinate2Base = resultCoordinate[2] - dilation * (weightShape[2] - 1) + padding;
+
+	int weightCoordinate[3];
+	weightCoordinate[1] = resultGroupIndex;
+
 	float resultValue = 0;
-	if (resultCoordinate[2] + outputPadding < resultShape[2]) {
-		const int resultGroupSize = resultShape[1] / groups;
-		const int groupNumber = resultCoordinate[1] / resultGroupSize;
-		const int resultGroupIndex = resultCoordinate[1] % resultGroupSize;
-		const int inputGroupSize = inputShape[1] / groups;
-
-		int inputCoordinate[3];
-		inputCoordinate[0] = resultCoordinate[0];
-		const int inputCoordinate1Base = groupNumber * inputGroupSize;
-		const int inputCoordinate2Base = resultCoordinate[2] - dilation * (weightShape[2] - 1) + padding;
-
-		int weightCoordinate[3];
-		weightCoordinate[1] = resultGroupIndex;
-
-		const int kernelWidth = weightShape[2];
-		for (int inChannelGroupIndex = 0; inChannelGroupIndex < inputGroupSize; ++inChannelGroupIndex) {
-			inputCoordinate[1] = inputCoordinate1Base + inChannelGroupIndex;
-			weightCoordinate[0] = inputCoordinate[1];
-			for (int kernelWidthIndex = 0; kernelWidthIndex < kernelWidth; ++kernelWidthIndex) {
-				inputCoordinate[2] = inputCoordinate2Base + kernelWidthIndex * dilation;
-				float inputValue = 0;
-				if (0 == inputCoordinate[2] % stride) {
-					inputCoordinate[2] /= stride;
-					if (inputCoordinate[2] > -1 && inputCoordinate[2] < inputShape[2]) {
-						inputValue = input[coordinateToGid(inputCoordinate, inputDimSizes)];
-					}
+	const int kernelWidth = weightShape[2];
+	for (int inChannelGroupIndex = 0; inChannelGroupIndex < inputGroupSize; ++inChannelGroupIndex) {
+		inputCoordinate[1] = inputCoordinate1Base + inChannelGroupIndex;
+		weightCoordinate[0] = inputCoordinate[1];
+		for (int kernelWidthIndex = 0; kernelWidthIndex < kernelWidth; ++kernelWidthIndex) {
+			inputCoordinate[2] = inputCoordinate2Base + kernelWidthIndex * dilation;
+			float inputValue = 0;
+			if (0 == inputCoordinate[2] % stride) {
+				inputCoordinate[2] /= stride;
+				if (inputCoordinate[2] > -1 && inputCoordinate[2] < inputShape[2]) {
+					inputValue = input[coordinateToGid(inputCoordinate, inputDimSizes)];
 				}
-
-				weightCoordinate[2] = kernelWidthIndex;
-				float weightValue = weight[coordinateToGid(weightCoordinate, weightDimSizes)];
-
-				resultValue += (inputValue * weightValue);
 			}
+
+			weightCoordinate[2] = kernelWidthIndex;
+			float weightValue = weight[coordinateToGid(weightCoordinate, weightDimSizes)];
+
+			resultValue += (inputValue * weightValue);
 		}
 	}
 	result[gid] = resultValue;

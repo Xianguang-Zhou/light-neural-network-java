@@ -867,8 +867,8 @@ public class Tensor implements Cloneable {
 		}
 		Tensor result = create(this.shape.get(0), weight.shape.get(1) * groups, (this.shape.get(2) - 1) * stride
 				- 2 * padding + dilation * (weight.shape.get(2) - 1) + outputPadding + 1);
-		kernel(CrossCorrelationTranspose1DKernel.class).execute(this, weight, stride, padding, outputPadding, groups,
-				dilation, result);
+		kernel(CrossCorrelationTranspose1DKernel.class).execute(this, weight, stride, padding, groups, dilation,
+				result);
 		return result;
 	}
 
@@ -924,8 +924,8 @@ public class Tensor implements Cloneable {
 						+ outputPadding.e0 + 1,
 				(this.shape.get(3) - 1) * stride.e1 - 2 * padding.e1 + dilation.e1 * (weight.shape.get(3) - 1)
 						+ outputPadding.e1 + 1);
-		kernel(CrossCorrelationTranspose2DKernel.class).execute(this, weight, stride, padding, outputPadding, groups,
-				dilation, result);
+		kernel(CrossCorrelationTranspose2DKernel.class).execute(this, weight, stride, padding, groups, dilation,
+				result);
 		return result;
 	}
 

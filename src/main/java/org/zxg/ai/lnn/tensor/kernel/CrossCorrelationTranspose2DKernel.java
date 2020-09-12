@@ -28,13 +28,12 @@ import org.zxg.ai.lnn.tuple.IntTuple2;
  */
 public class CrossCorrelationTranspose2DKernel extends Kernel {
 
-	public void execute(Tensor input, Tensor weight, IntTuple2 stride, IntTuple2 padding, IntTuple2 outputPadding,
-			int groups, IntTuple2 dilation, Tensor result) {
+	public void execute(Tensor input, Tensor weight, IntTuple2 stride, IntTuple2 padding, int groups,
+			IntTuple2 dilation, Tensor result) {
 		FloatArray resultData = result.flatData();
 		Calling c = call();
 		c.arg(stride.e0).arg(stride.e1);
 		c.arg(padding.e0).arg(padding.e1);
-		c.arg(outputPadding.e0).arg(outputPadding.e1);
 		c.arg(groups);
 		c.arg(dilation.e0).arg(dilation.e1);
 		c.in(input.shape()).in(weight.shape()).in(result.shape());
