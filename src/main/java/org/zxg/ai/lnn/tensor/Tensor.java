@@ -33,6 +33,7 @@ import org.zxg.ai.lnn.tensor.kernel.CrossCorrelation2DKernel;
 import org.zxg.ai.lnn.tensor.kernel.CrossCorrelation3DKernel;
 import org.zxg.ai.lnn.tensor.kernel.CrossCorrelationTranspose1DKernel;
 import org.zxg.ai.lnn.tensor.kernel.CrossCorrelationTranspose2DKernel;
+import org.zxg.ai.lnn.tensor.kernel.CrossCorrelationTranspose3DKernel;
 import org.zxg.ai.lnn.tensor.kernel.DivideKernel;
 import org.zxg.ai.lnn.tensor.kernel.DivideValueKernel;
 import org.zxg.ai.lnn.tensor.kernel.EqualKernel;
@@ -925,6 +926,65 @@ public class Tensor implements Cloneable {
 				(this.shape.get(3) - 1) * stride.e1 - 2 * padding.e1 + dilation.e1 * (weight.shape.get(3) - 1)
 						+ outputPadding.e1 + 1);
 		kernel(CrossCorrelationTranspose2DKernel.class).execute(this, weight, stride, padding, groups, dilation,
+				result);
+		return result;
+	}
+
+	public Tensor convTranspose3d(Tensor weight) {
+		return convTranspose3d(weight, new IntTuple3(1, 1, 1));
+	}
+
+	public Tensor convTranspose3d(Tensor weight, IntTuple3 stride) {
+		return convTranspose3d(weight, stride, new IntTuple3(0, 0, 0));
+	}
+
+	public Tensor convTranspose3d(Tensor weight, IntTuple3 stride, IntTuple3 padding) {
+		return convTranspose3d(weight, stride, padding, new IntTuple3(0, 0, 0));
+	}
+
+	public Tensor convTranspose3d(Tensor weight, IntTuple3 stride, IntTuple3 padding, IntTuple3 outputPadding) {
+		return convTranspose3d(weight, stride, padding, outputPadding, 1);
+	}
+
+	public Tensor convTranspose3d(Tensor weight, IntTuple3 stride, IntTuple3 padding, IntTuple3 outputPadding,
+			int groups) {
+		return convTranspose3d(weight, stride, padding, outputPadding, groups, new IntTuple3(1, 1, 1));
+	}
+
+	public Tensor convTranspose3d(Tensor weight, IntTuple3 stride, IntTuple3 padding, IntTuple3 outputPadding,
+			int groups, IntTuple3 dilation) {
+		if (this.ndim() != 5 || weight.ndim() != 5) {
+			throw new DimException();
+		}
+		if (stride.anyoneLessThan(1)) {
+			throw new LnnException();
+		}
+		if (padding.anyoneLessThan(0)) {
+			throw new LnnException();
+		}
+		if (outputPadding.anyoneLessThan(0)) {
+			throw new LnnException();
+		}
+		if (groups < 1) {
+			throw new LnnException();
+		}
+		if (this.shape.get(1) % groups != 0) {
+			throw new LnnException();
+		}
+		if (dilation.anyoneLessThan(1)) {
+			throw new LnnException();
+		}
+		if (this.shape.get(1) != weight.shape.get(0)) {
+			throw new LnnException();
+		}
+		Tensor result = create(this.shape.get(0), weight.shape.get(1) * groups,
+				(this.shape.get(2) - 1) * stride.e0 - 2 * padding.e0 + dilation.e0 * (weight.shape.get(2) - 1)
+						+ outputPadding.e0 + 1,
+				(this.shape.get(3) - 1) * stride.e1 - 2 * padding.e1 + dilation.e1 * (weight.shape.get(3) - 1)
+						+ outputPadding.e1 + 1,
+				(this.shape.get(4) - 1) * stride.e2 - 2 * padding.e2 + dilation.e2 * (weight.shape.get(4) - 1)
+						+ outputPadding.e2 + 1);
+		kernel(CrossCorrelationTranspose3DKernel.class).execute(this, weight, stride, padding, groups, dilation,
 				result);
 		return result;
 	}
