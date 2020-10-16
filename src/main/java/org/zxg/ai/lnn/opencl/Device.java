@@ -17,6 +17,7 @@
 package org.zxg.ai.lnn.opencl;
 
 import java.io.Closeable;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,10 +57,11 @@ public class Device implements Closeable {
 				kernel = kernels.get(type);
 				if (null == kernel) {
 					try {
-						kernel = type.newInstance();
+						kernel = type.getDeclaredConstructor().newInstance();
 						kernel.init(clDevice);
 						kernels.put(type, kernel);
-					} catch (InstantiationException | IllegalAccessException e) {
+					} catch (InstantiationException | IllegalAccessException | NoSuchMethodException
+							| InvocationTargetException e) {
 						throw new LnnCLException(e);
 					}
 				}
