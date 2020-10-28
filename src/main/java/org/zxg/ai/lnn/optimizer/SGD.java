@@ -31,21 +31,30 @@ public class SGD extends Optimizer {
 
 	public static final String learningRateOption = "learningRate";
 	public static final String momentumOption = "momentum";
+	public static final String nesterovOption = "nesterov";
 
 	public SGD(Iterable<ParamGroup> paramGroups, float learningRate) {
 		this(paramGroups, learningRate, 0);
 	}
 
 	public SGD(Iterable<ParamGroup> paramGroups, float learningRate, float momentum) {
+		this(paramGroups, learningRate, momentum, false);
+	}
+
+	public SGD(Iterable<ParamGroup> paramGroups, float learningRate, float momentum, boolean nesterov) {
 		if (learningRate < 0) {
 			throw new LnnException();
 		}
 		if (momentum < 0) {
 			throw new LnnException();
 		}
+		if (nesterov && 0 == momentum) {
+			throw new LnnException();
+		}
 		Map<String, Object> defaults = new HashMap<>();
 		defaults.put(learningRateOption, learningRate);
 		defaults.put(momentumOption, momentum);
+		defaults.put(nesterovOption, nesterov);
 		init(paramGroups, defaults);
 	}
 
@@ -55,17 +64,18 @@ public class SGD extends Optimizer {
 		for (ParamGroup paramGroup : paramGroups) {
 			float learningRate = (Float) paramGroup.options.get(learningRateOption);
 			float momentumFactor = (Float) paramGroup.options.get(momentumOption);
+			boolean nesterov = (Boolean) paramGroup.options.get(nesterovOption);
 			for (Variable param : paramGroup.params()) {
 				if (param.requiresGradient()) {
-					Tensor deltaParam = param.gradient().mul(learningRate);
+					Tensor deltaParam = param.gradient();
 					if (0 != momentumFactor) {
 						Tensor lastMomentum = (Tensor) state.get(param);
-						if (null != lastMomentum) {
-							deltaParam = deltaParam.add(lastMomentum.mul(momentumFactor));
-						}
-						state.put(param, deltaParam);
+						lastMomentum = null != lastMomentum ? deltaParam.add(lastMomentum.mul(momentumFactor))
+								: deltaParam;
+						state.put(param, lastMomentum);
+						deltaParam = nesterov ? deltaParam.add(lastMomentum.mul(momentumFactor)) : lastMomentum;
 					}
-					param.value(param.value().sub(deltaParam));
+					param.value(param.value().sub(deltaParam.mul(learningRate)));
 				}
 			}
 		}

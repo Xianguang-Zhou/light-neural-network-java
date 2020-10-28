@@ -16,6 +16,7 @@
  */
 package org.zxg.ai.lnn.optimizer;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.zxg.ai.lnn.autograd.Variable;
@@ -27,6 +28,10 @@ public class ParamGroup {
 
 	private Iterable<Variable> params;
 	Map<String, Object> options;
+
+	public ParamGroup(Iterable<Variable> params) {
+		this(params, new HashMap<String, Object>());
+	}
 
 	public ParamGroup(Iterable<Variable> params, Map<String, Object> options) {
 		this.params = params;
