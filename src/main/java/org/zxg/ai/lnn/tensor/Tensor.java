@@ -25,6 +25,7 @@ import org.zxg.ai.lnn.tensor.kernel.AbsKernel;
 import org.zxg.ai.lnn.tensor.kernel.AddKernel;
 import org.zxg.ai.lnn.tensor.kernel.AddValueKernel;
 import org.zxg.ai.lnn.tensor.kernel.ArangeKernel;
+import org.zxg.ai.lnn.tensor.kernel.AvgPool1DKernel;
 import org.zxg.ai.lnn.tensor.kernel.AxisSliceKernel;
 import org.zxg.ai.lnn.tensor.kernel.BroadcastKernel;
 import org.zxg.ai.lnn.tensor.kernel.ConstantKernel;
@@ -986,6 +987,44 @@ public class Tensor implements Cloneable {
 						+ outputPadding.e2 + 1);
 		kernel(CrossCorrelationTranspose3DKernel.class).execute(this, weight, stride, padding, groups, dilation,
 				result);
+		return result;
+	}
+
+	public Tensor avgPool1d(int kernelSize) {
+		return avgPool1d(kernelSize, kernelSize);
+	}
+
+	public Tensor avgPool1d(int kernelSize, int stride) {
+		return avgPool1d(kernelSize, stride, 0);
+	}
+
+	public Tensor avgPool1d(int kernelSize, int stride, int padding) {
+		return avgPool1d(kernelSize, stride, padding, false);
+	}
+
+	public Tensor avgPool1d(int kernelSize, int stride, int padding, boolean ceilMode) {
+		return avgPool1d(kernelSize, stride, padding, ceilMode, true);
+	}
+
+	public Tensor avgPool1d(int kernelSize, int stride, int padding, boolean ceilMode, boolean countIncludePad) {
+		if (this.ndim() != 3) {
+			throw new DimException();
+		}
+		if (kernelSize < 1) {
+			throw new LnnException();
+		}
+		if (stride < 1) {
+			throw new LnnException();
+		}
+		if (padding < 0) {
+			throw new LnnException();
+		}
+		double resultWidth = (this.shape.get(2) + 2 * padding - kernelSize) / (double) stride + 1;
+		if (ceilMode) {
+			resultWidth = Math.ceil(resultWidth);
+		}
+		Tensor result = create(this.shape.get(0), this.shape.get(1), (int) resultWidth);
+		kernel(AvgPool1DKernel.class).execute(this, kernelSize, stride, padding, countIncludePad, result);
 		return result;
 	}
 
