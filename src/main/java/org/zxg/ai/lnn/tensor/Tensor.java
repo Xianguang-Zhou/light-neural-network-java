@@ -16,6 +16,9 @@
  */
 package org.zxg.ai.lnn.tensor;
 
+import java.util.Deque;
+import java.util.LinkedList;
+
 import org.zxg.ai.lnn.LnnException;
 import org.zxg.ai.lnn.opencl.Device;
 import org.zxg.ai.lnn.opencl.FloatArray;
@@ -236,6 +239,35 @@ public class Tensor implements Cloneable {
 		this.data = data;
 	}
 
+	public void data(Object object) {
+		if (object instanceof Float) {
+			this.data.set(0, ((Float) object).floatValue());
+		} else if (object instanceof float[]) {
+			this.data.set(0, (float[]) object);
+		} else if (object instanceof Object[]) {
+			int index = 0;
+			Deque<ArrayIterator> iteratorStack = new LinkedList<>();
+			iteratorStack.push(new ArrayIterator((Object[]) object));
+			do {
+				ArrayIterator arrayIterator = iteratorStack.peek();
+				if (arrayIterator.hasNext()) {
+					Object objectElement = arrayIterator.next();
+					if (objectElement instanceof Float) {
+						this.data.set(index++, ((Float) objectElement).floatValue());
+					} else if (objectElement instanceof float[]) {
+						float[] floatsElement = (float[]) objectElement;
+						this.data.set(index, floatsElement);
+						index += floatsElement.length;
+					} else if (objectElement instanceof Object[]) {
+						iteratorStack.push(new ArrayIterator((Object[]) objectElement));
+					}
+				} else {
+					iteratorStack.pop();
+				}
+			} while (!iteratorStack.isEmpty());
+		}
+	}
+
 	public float scalar() {
 		return data.get(0);
 	}
@@ -324,6 +356,27 @@ public class Tensor implements Cloneable {
 
 	public void set(float value, int... indexes) {
 		data.set(dataIndex(indexes), value);
+	}
+
+	public Element element(int... indexes) {
+		return new Element(dataIndex(indexes));
+	}
+
+	public class Element {
+
+		private int index;
+
+		Element(int index) {
+			this.index = index;
+		}
+
+		public float value() {
+			return data.get(index);
+		}
+
+		public void value(float value) {
+			data.set(index, value);
+		}
 	}
 
 	public Tensor slice(int begin, int end) {

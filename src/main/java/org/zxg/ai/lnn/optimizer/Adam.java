@@ -103,7 +103,7 @@ public class Adam extends Optimizer {
 	}
 
 	public static class ParamState {
-		public int step;
+		public int step = 0;
 		public Tensor gradientSum;
 		public Tensor gradientSquareSum;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
+ * Copyright (c) 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -14,22 +14,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zxg.ai.lnn.tensor;
+package org.zxg.ai.lnn.tuple;
 
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class Array {
+public class Tuple {
 
-	public static int[] i(int... e) {
-		return e;
+	public static IntTuple2 it(int e0, int e1) {
+		return new IntTuple2(e0, e1);
 	}
 
-	public static float[] f(float... e) {
-		return e;
+	public static IntTuple3 it(int e0, int e1, int e2) {
+		return new IntTuple3(e0, e1, e2);
 	}
 
-	public static Object[] o(Object... e) {
-		return e;
+	public static FloatTuple2 ft(float e0, float e1) {
+		return new FloatTuple2(e0, e1);
+	}
+
+	public static IntTuple2 t(int e0, int e1) {
+		return new IntTuple2(e0, e1);
+	}
+
+	public static IntTuple3 t(int e0, int e1, int e2) {
+		return new IntTuple3(e0, e1, e2);
+	}
+
+	public static FloatTuple2 t(float e0, float e1) {
+		return new FloatTuple2(e0, e1);
 	}
 }

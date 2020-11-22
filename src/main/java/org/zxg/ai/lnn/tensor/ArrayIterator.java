@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
+ * Copyright (c) 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,17 +19,21 @@ package org.zxg.ai.lnn.tensor;
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class Array {
+class ArrayIterator {
 
-	public static int[] i(int... e) {
-		return e;
+	private Object[] array;
+	private int index;
+
+	public ArrayIterator(Object[] array) {
+		this.array = array;
+		this.index = 0;
 	}
 
-	public static float[] f(float... e) {
-		return e;
+	public Object next() {
+		return array[index++];
 	}
 
-	public static Object[] o(Object... e) {
-		return e;
+	public boolean hasNext() {
+		return index < array.length;
 	}
 }
