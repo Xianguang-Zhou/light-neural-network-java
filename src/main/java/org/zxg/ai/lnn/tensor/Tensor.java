@@ -240,8 +240,8 @@ public class Tensor implements Cloneable {
 	}
 
 	public void data(Object object) {
-		if (object instanceof Float) {
-			this.data.set(0, ((Float) object).floatValue());
+		if (object instanceof Number) {
+			this.data.set(0, ((Number) object).floatValue());
 		} else if (object instanceof float[]) {
 			this.data.set(0, (float[]) object);
 		} else if (object instanceof Object[]) {
@@ -252,8 +252,8 @@ public class Tensor implements Cloneable {
 				ArrayIterator arrayIterator = iteratorStack.peek();
 				if (arrayIterator.hasNext()) {
 					Object objectElement = arrayIterator.next();
-					if (objectElement instanceof Float) {
-						this.data.set(index++, ((Float) objectElement).floatValue());
+					if (objectElement instanceof Number) {
+						this.data.set(index++, ((Number) objectElement).floatValue());
 					} else if (objectElement instanceof float[]) {
 						float[] floatsElement = (float[]) objectElement;
 						this.data.set(index, floatsElement);
