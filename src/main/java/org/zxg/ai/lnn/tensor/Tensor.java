@@ -29,6 +29,7 @@ import org.zxg.ai.lnn.tensor.kernel.AddKernel;
 import org.zxg.ai.lnn.tensor.kernel.AddValueKernel;
 import org.zxg.ai.lnn.tensor.kernel.ArangeKernel;
 import org.zxg.ai.lnn.tensor.kernel.AvgPool1DKernel;
+import org.zxg.ai.lnn.tensor.kernel.AvgPool2DKernel;
 import org.zxg.ai.lnn.tensor.kernel.AxisSliceKernel;
 import org.zxg.ai.lnn.tensor.kernel.BroadcastKernel;
 import org.zxg.ai.lnn.tensor.kernel.ConstantKernel;
@@ -1078,6 +1079,56 @@ public class Tensor implements Cloneable {
 		}
 		Tensor result = create(this.shape.get(0), this.shape.get(1), (int) resultWidth);
 		kernel(AvgPool1DKernel.class).execute(this, kernelSize, stride, padding, countIncludePad, result);
+		return result;
+	}
+
+	public Tensor avgPool2d(IntTuple2 kernelSize) {
+		return avgPool2d(kernelSize, kernelSize);
+	}
+
+	public Tensor avgPool2d(IntTuple2 kernelSize, IntTuple2 stride) {
+		return avgPool2d(kernelSize, stride, new IntTuple2(0, 0));
+	}
+
+	public Tensor avgPool2d(IntTuple2 kernelSize, IntTuple2 stride, IntTuple2 padding) {
+		return avgPool2d(kernelSize, stride, padding, false);
+	}
+
+	public Tensor avgPool2d(IntTuple2 kernelSize, IntTuple2 stride, IntTuple2 padding, boolean ceilMode) {
+		return avgPool2d(kernelSize, stride, padding, ceilMode, true);
+	}
+
+	public Tensor avgPool2d(IntTuple2 kernelSize, IntTuple2 stride, IntTuple2 padding, boolean ceilMode,
+			boolean countIncludePad) {
+		return avgPool2d(kernelSize, stride, padding, ceilMode, countIncludePad, null);
+	}
+
+	public Tensor avgPool2d(IntTuple2 kernelSize, IntTuple2 stride, IntTuple2 padding, boolean ceilMode,
+			boolean countIncludePad, Integer divisorOverride) {
+		if (this.ndim() != 4) {
+			throw new DimException();
+		}
+		if (kernelSize.anyoneLessThan(1)) {
+			throw new LnnException();
+		}
+		if (stride.anyoneLessThan(1)) {
+			throw new LnnException();
+		}
+		if (padding.anyoneLessThan(0)) {
+			throw new LnnException();
+		}
+		if (divisorOverride != null && divisorOverride < 1) {
+			throw new LnnException();
+		}
+		double resultHeight = (this.shape.get(2) + 2 * padding.e0 - kernelSize.e0) / (double) stride.e0 + 1;
+		double resultWidth = (this.shape.get(3) + 2 * padding.e1 - kernelSize.e1) / (double) stride.e1 + 1;
+		if (ceilMode) {
+			resultHeight = Math.ceil(resultHeight);
+			resultWidth = Math.ceil(resultWidth);
+		}
+		Tensor result = create(this.shape.get(0), this.shape.get(1), (int) resultHeight, (int) resultWidth);
+		kernel(AvgPool2DKernel.class).execute(this, kernelSize, stride, padding, countIncludePad, divisorOverride,
+				result);
 		return result;
 	}
 
