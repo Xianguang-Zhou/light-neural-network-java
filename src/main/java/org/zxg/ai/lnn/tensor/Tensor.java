@@ -41,6 +41,7 @@ import org.zxg.ai.lnn.tensor.kernel.CrossCorrelationTranspose2DKernel;
 import org.zxg.ai.lnn.tensor.kernel.CrossCorrelationTranspose3DKernel;
 import org.zxg.ai.lnn.tensor.kernel.DivideKernel;
 import org.zxg.ai.lnn.tensor.kernel.DivideValueKernel;
+import org.zxg.ai.lnn.tensor.kernel.DividedByValueKernel;
 import org.zxg.ai.lnn.tensor.kernel.EqualKernel;
 import org.zxg.ai.lnn.tensor.kernel.EqualsKernel;
 import org.zxg.ai.lnn.tensor.kernel.LesserEqualKernel;
@@ -704,6 +705,12 @@ public class Tensor implements Cloneable {
 	public Tensor div(float value) {
 		Tensor result = like();
 		kernel(DivideValueKernel.class).execute(data, value, result.data);
+		return result;
+	}
+
+	public Tensor dividedBy(float value) {
+		Tensor result = like();
+		kernel(DividedByValueKernel.class).execute(value, data, result.data);
 		return result;
 	}
 

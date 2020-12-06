@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
+ * Copyright (c) 2019, 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -282,6 +282,17 @@ public class Variable {
 			@Override
 			protected Tensor gradient() {
 				return resultValue.div(other.value).negative();
+			}
+		});
+	}
+
+	public Variable dividedBy(float constant) {
+		Tensor resultValue = value.dividedBy(constant);
+		return new Variable(resultValue, new Computation(this) {
+
+			@Override
+			protected Tensor gradient() {
+				return resultValue.div(Variable.this.value).negative();
 			}
 		});
 	}
