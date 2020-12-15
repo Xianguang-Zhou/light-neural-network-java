@@ -30,6 +30,7 @@ import org.zxg.ai.lnn.tensor.kernel.AddValueKernel;
 import org.zxg.ai.lnn.tensor.kernel.ArangeKernel;
 import org.zxg.ai.lnn.tensor.kernel.AvgPool1DKernel;
 import org.zxg.ai.lnn.tensor.kernel.AvgPool2DKernel;
+import org.zxg.ai.lnn.tensor.kernel.AvgPool3DKernel;
 import org.zxg.ai.lnn.tensor.kernel.AxisSliceKernel;
 import org.zxg.ai.lnn.tensor.kernel.BroadcastKernel;
 import org.zxg.ai.lnn.tensor.kernel.ConstantKernel;
@@ -436,8 +437,16 @@ public class Tensor implements Cloneable {
 		kernel(SliceAssignKernel.class).execute(new IntArray(begin), value, this);
 	}
 
+	public Tensor take(int[] indexes) {
+		return take(new IntArray(indexes));
+	}
+
 	public Tensor take(IntArray indexes) {
 		return take(0, indexes);
+	}
+
+	public Tensor take(int axis, int[] indexes) {
+		return take(axis, new IntArray(indexes));
 	}
 
 	public Tensor take(int axis, IntArray indexes) {
@@ -1135,6 +1144,59 @@ public class Tensor implements Cloneable {
 		}
 		Tensor result = create(this.shape.get(0), this.shape.get(1), (int) resultHeight, (int) resultWidth);
 		kernel(AvgPool2DKernel.class).execute(this, kernelSize, stride, padding, countIncludePad, divisorOverride,
+				result);
+		return result;
+	}
+
+	public Tensor avgPool3d(IntTuple3 kernelSize) {
+		return avgPool3d(kernelSize, kernelSize);
+	}
+
+	public Tensor avgPool3d(IntTuple3 kernelSize, IntTuple3 stride) {
+		return avgPool3d(kernelSize, stride, new IntTuple3(0, 0, 0));
+	}
+
+	public Tensor avgPool3d(IntTuple3 kernelSize, IntTuple3 stride, IntTuple3 padding) {
+		return avgPool3d(kernelSize, stride, padding, false);
+	}
+
+	public Tensor avgPool3d(IntTuple3 kernelSize, IntTuple3 stride, IntTuple3 padding, boolean ceilMode) {
+		return avgPool3d(kernelSize, stride, padding, ceilMode, true);
+	}
+
+	public Tensor avgPool3d(IntTuple3 kernelSize, IntTuple3 stride, IntTuple3 padding, boolean ceilMode,
+			boolean countIncludePad) {
+		return avgPool3d(kernelSize, stride, padding, ceilMode, countIncludePad, null);
+	}
+
+	public Tensor avgPool3d(IntTuple3 kernelSize, IntTuple3 stride, IntTuple3 padding, boolean ceilMode,
+			boolean countIncludePad, Integer divisorOverride) {
+		if (this.ndim() != 5) {
+			throw new DimException();
+		}
+		if (kernelSize.anyoneLessThan(1)) {
+			throw new LnnException();
+		}
+		if (stride.anyoneLessThan(1)) {
+			throw new LnnException();
+		}
+		if (padding.anyoneLessThan(0)) {
+			throw new LnnException();
+		}
+		if (divisorOverride != null && divisorOverride < 1) {
+			throw new LnnException();
+		}
+		double resultDepth = (this.shape.get(2) + 2 * padding.e0 - kernelSize.e0) / (double) stride.e0 + 1;
+		double resultHeight = (this.shape.get(3) + 2 * padding.e1 - kernelSize.e1) / (double) stride.e1 + 1;
+		double resultWidth = (this.shape.get(4) + 2 * padding.e2 - kernelSize.e2) / (double) stride.e2 + 1;
+		if (ceilMode) {
+			resultDepth = Math.ceil(resultDepth);
+			resultHeight = Math.ceil(resultHeight);
+			resultWidth = Math.ceil(resultWidth);
+		}
+		Tensor result = create(this.shape.get(0), this.shape.get(1), (int) resultDepth, (int) resultHeight,
+				(int) resultWidth);
+		kernel(AvgPool3DKernel.class).execute(this, kernelSize, stride, padding, countIncludePad, divisorOverride,
 				result);
 		return result;
 	}
