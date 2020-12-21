@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
+ * Copyright (c) 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -14,30 +14,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zxg.ai.lnn.tensor;
-
-/**
- * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
- */
-public class Array {
-
-	public static int[] i(int... e) {
-		return e;
-	}
-
-	public static float[] f(float... e) {
-		return e;
-	}
-
-	public static Object[] o(Object... e) {
-		return e;
-	}
-
-	public static int[] a(int... e) {
-		return e;
-	}
-
-	public static float[] a(float... e) {
-		return e;
-	}
+__kernel void run(__constant float* source, __global float* result) {
+	const size_t gid = get_global_id(0);
+	const float element = source[gid];
+	result[gid] = element * element;
 }

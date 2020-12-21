@@ -249,6 +249,16 @@ public class Variable {
 		});
 	}
 
+	public Variable square() {
+		return new Variable(value.square(), new Computation(this) {
+
+			@Override
+			protected Tensor gradient() {
+				return Variable.this.value.mul(2);
+			}
+		});
+	}
+
 	public Variable div(float constant) {
 		return new Variable(value.div(constant), new Computation(this) {
 

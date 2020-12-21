@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
+ * Copyright (c) 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -14,30 +14,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zxg.ai.lnn.tensor;
+package org.zxg.ai.lnn.tensor.kernel;
+
+import org.zxg.ai.lnn.opencl.Calling;
+import org.zxg.ai.lnn.opencl.FloatArray;
+import org.zxg.ai.lnn.opencl.Kernel;
+import org.zxg.ai.lnn.opencl.Range1D;
 
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
  */
-public class Array {
+public class SquareKernel extends Kernel {
 
-	public static int[] i(int... e) {
-		return e;
-	}
-
-	public static float[] f(float... e) {
-		return e;
-	}
-
-	public static Object[] o(Object... e) {
-		return e;
-	}
-
-	public static int[] a(int... e) {
-		return e;
-	}
-
-	public static float[] a(float... e) {
-		return e;
+	public void execute(FloatArray source, FloatArray result) {
+		Calling c = call();
+		c.in(source).out(result);
+		c.pass(new Range1D(result.length));
+		c.execute();
 	}
 }

@@ -62,6 +62,7 @@ import org.zxg.ai.lnn.tensor.kernel.ReluKernel;
 import org.zxg.ai.lnn.tensor.kernel.SignKernel;
 import org.zxg.ai.lnn.tensor.kernel.SliceAssignKernel;
 import org.zxg.ai.lnn.tensor.kernel.SliceKernel;
+import org.zxg.ai.lnn.tensor.kernel.SquareKernel;
 import org.zxg.ai.lnn.tensor.kernel.SquareRootKernel;
 import org.zxg.ai.lnn.tensor.kernel.SubtractKernel;
 import org.zxg.ai.lnn.tensor.kernel.SubtractValueKernel;
@@ -247,6 +248,11 @@ public class Tensor implements Cloneable {
 			this.data.set(0, ((Number) object).floatValue());
 		} else if (object instanceof float[]) {
 			this.data.set(0, (float[]) object);
+		} else if (object instanceof double[]) {
+			int index = 0;
+			for (double element : (double[]) object) {
+				this.data.set(index++, (float) element);
+			}
 		} else if (object instanceof Object[]) {
 			int index = 0;
 			Deque<ArrayIterator> iteratorStack = new LinkedList<>();
@@ -261,6 +267,10 @@ public class Tensor implements Cloneable {
 						float[] floatsElement = (float[]) objectElement;
 						this.data.set(index, floatsElement);
 						index += floatsElement.length;
+					} else if (objectElement instanceof double[]) {
+						for (double value : (double[]) objectElement) {
+							this.data.set(index++, (float) value);
+						}
 					} else if (objectElement instanceof Object[]) {
 						iteratorStack.push(new ArrayIterator((Object[]) objectElement));
 					}
@@ -701,6 +711,12 @@ public class Tensor implements Cloneable {
 	public Tensor mul(float value) {
 		Tensor result = like();
 		kernel(MultiplyValueKernel.class).execute(data, value, result.data);
+		return result;
+	}
+
+	public Tensor square() {
+		Tensor result = like();
+		kernel(SquareKernel.class).execute(data, result.data);
 		return result;
 	}
 
