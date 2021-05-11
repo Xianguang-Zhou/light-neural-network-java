@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
+ * Copyright (c) 2019, 2021, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -65,6 +65,10 @@ public class Calling {
 
 	public Calling arg(long number) {
 		return arg(new LongArg(number));
+	}
+
+	public Calling nullPtr() {
+		return arg(new NullPtrArg());
 	}
 
 	public Calling arg(Buffer directBuffer, BufferArg.Type type) {

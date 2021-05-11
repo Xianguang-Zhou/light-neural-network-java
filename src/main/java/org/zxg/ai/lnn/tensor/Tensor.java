@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
+ * Copyright (c) 2019, 2021, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -48,6 +48,7 @@ import org.zxg.ai.lnn.tensor.kernel.EqualsKernel;
 import org.zxg.ai.lnn.tensor.kernel.LesserEqualKernel;
 import org.zxg.ai.lnn.tensor.kernel.LesserKernel;
 import org.zxg.ai.lnn.tensor.kernel.LogarithmKernel;
+import org.zxg.ai.lnn.tensor.kernel.MaxPool1DKernel;
 import org.zxg.ai.lnn.tensor.kernel.MultiplyKernel;
 import org.zxg.ai.lnn.tensor.kernel.MultiplyValueKernel;
 import org.zxg.ai.lnn.tensor.kernel.NaturalExponentiationKernel;
@@ -73,6 +74,7 @@ import org.zxg.ai.lnn.tensor.kernel.TransposeKernel;
 import org.zxg.ai.lnn.tensor.kernel.VectorProductKernel;
 import org.zxg.ai.lnn.tuple.IntTuple2;
 import org.zxg.ai.lnn.tuple.IntTuple3;
+import org.zxg.ai.lnn.tuple.Tuple2;
 
 /**
  * @author <a href="mailto:xianguang.zhou@outlook.com">Xianguang Zhou</a>
@@ -1215,6 +1217,54 @@ public class Tensor implements Cloneable {
 		kernel(AvgPool3DKernel.class).execute(this, kernelSize, stride, padding, countIncludePad, divisorOverride,
 				result);
 		return result;
+	}
+
+	public Tuple2<Tensor, IntTensor> maxPool1d(int kernelSize) {
+		return maxPool1d(kernelSize, kernelSize);
+	}
+
+	public Tuple2<Tensor, IntTensor> maxPool1d(int kernelSize, int stride) {
+		return maxPool1d(kernelSize, stride, 0);
+	}
+
+	public Tuple2<Tensor, IntTensor> maxPool1d(int kernelSize, int stride, int padding) {
+		return maxPool1d(kernelSize, stride, padding, 1);
+	}
+
+	public Tuple2<Tensor, IntTensor> maxPool1d(int kernelSize, int stride, int padding, int dilation) {
+		return maxPool1d(kernelSize, stride, padding, dilation, false);
+	}
+
+	public Tuple2<Tensor, IntTensor> maxPool1d(int kernelSize, int stride, int padding, int dilation,
+			boolean returnIndices) {
+		return maxPool1d(kernelSize, stride, padding, dilation, returnIndices, false);
+	}
+
+	public Tuple2<Tensor, IntTensor> maxPool1d(int kernelSize, int stride, int padding, int dilation,
+			boolean returnIndices, boolean ceilMode) {
+		if (this.ndim() != 3) {
+			throw new DimException();
+		}
+		if (kernelSize < 1) {
+			throw new LnnException();
+		}
+		if (stride < 1) {
+			throw new LnnException();
+		}
+		if (padding < 0 || padding > kernelSize / 2) {
+			throw new LnnException();
+		}
+		if (dilation < 1) {
+			throw new LnnException();
+		}
+		double resultWidth = (this.shape.get(2) + 2 * padding - dilation * (kernelSize - 1) - 1) / (double) stride + 1;
+		if (ceilMode) {
+			resultWidth = Math.ceil(resultWidth);
+		}
+		Tensor result = create(this.shape.get(0), this.shape.get(1), (int) resultWidth);
+		IntTensor indices = returnIndices ? new IntTensor(device, result.shape.clone()) : null;
+		kernel(MaxPool1DKernel.class).execute(this, kernelSize, stride, padding, dilation, result, indices);
+		return new Tuple2<Tensor, IntTensor>(result, indices);
 	}
 
 	public Tensor sqrt() {
