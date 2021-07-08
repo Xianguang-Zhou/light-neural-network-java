@@ -49,6 +49,7 @@ import org.zxg.ai.lnn.tensor.kernel.LesserEqualKernel;
 import org.zxg.ai.lnn.tensor.kernel.LesserKernel;
 import org.zxg.ai.lnn.tensor.kernel.LogarithmKernel;
 import org.zxg.ai.lnn.tensor.kernel.MaxPool1DKernel;
+import org.zxg.ai.lnn.tensor.kernel.MaxPool2DKernel;
 import org.zxg.ai.lnn.tensor.kernel.MultiplyKernel;
 import org.zxg.ai.lnn.tensor.kernel.MultiplyValueKernel;
 import org.zxg.ai.lnn.tensor.kernel.NaturalExponentiationKernel;
@@ -1264,6 +1265,59 @@ public class Tensor implements Cloneable {
 		Tensor result = create(this.shape.get(0), this.shape.get(1), (int) resultWidth);
 		IntTensor indices = returnIndices ? new IntTensor(device, result.shape.clone()) : null;
 		kernel(MaxPool1DKernel.class).execute(this, kernelSize, stride, padding, dilation, result, indices);
+		return new Tuple2<Tensor, IntTensor>(result, indices);
+	}
+
+	public Tuple2<Tensor, IntTensor> maxPool2d(IntTuple2 kernelSize) {
+		return maxPool2d(kernelSize, kernelSize);
+	}
+
+	public Tuple2<Tensor, IntTensor> maxPool2d(IntTuple2 kernelSize, IntTuple2 stride) {
+		return maxPool2d(kernelSize, stride, new IntTuple2(0, 0));
+	}
+
+	public Tuple2<Tensor, IntTensor> maxPool2d(IntTuple2 kernelSize, IntTuple2 stride, IntTuple2 padding) {
+		return maxPool2d(kernelSize, stride, padding, new IntTuple2(1, 1));
+	}
+
+	public Tuple2<Tensor, IntTensor> maxPool2d(IntTuple2 kernelSize, IntTuple2 stride, IntTuple2 padding,
+			IntTuple2 dilation) {
+		return maxPool2d(kernelSize, stride, padding, dilation, false);
+	}
+
+	public Tuple2<Tensor, IntTensor> maxPool2d(IntTuple2 kernelSize, IntTuple2 stride, IntTuple2 padding,
+			IntTuple2 dilation, boolean returnIndices) {
+		return maxPool2d(kernelSize, stride, padding, dilation, returnIndices, false);
+	}
+
+	public Tuple2<Tensor, IntTensor> maxPool2d(IntTuple2 kernelSize, IntTuple2 stride, IntTuple2 padding,
+			IntTuple2 dilation, boolean returnIndices, boolean ceilMode) {
+		if (this.ndim() != 4) {
+			throw new DimException();
+		}
+		if (kernelSize.anyoneLessThan(1)) {
+			throw new LnnException();
+		}
+		if (stride.anyoneLessThan(1)) {
+			throw new LnnException();
+		}
+		if (padding.anyoneLessThan(0) || padding.e0 > kernelSize.e0 / 2 || padding.e1 > kernelSize.e1 / 2) {
+			throw new LnnException();
+		}
+		if (dilation.anyoneLessThan(1)) {
+			throw new LnnException();
+		}
+		double resultHeight = (this.shape.get(2) + 2 * padding.e0 - dilation.e0 * (kernelSize.e0 - 1) - 1)
+				/ (double) stride.e0 + 1;
+		double resultWidth = (this.shape.get(3) + 2 * padding.e1 - dilation.e1 * (kernelSize.e1 - 1) - 1)
+				/ (double) stride.e1 + 1;
+		if (ceilMode) {
+			resultHeight = Math.ceil(resultHeight);
+			resultWidth = Math.ceil(resultWidth);
+		}
+		Tensor result = create(this.shape.get(0), this.shape.get(1), (int) resultHeight, (int) resultWidth);
+		IntTensor indices = returnIndices ? new IntTensor(device, result.shape.clone()) : null;
+		kernel(MaxPool2DKernel.class).execute(this, kernelSize, stride, padding, dilation, result, indices);
 		return new Tuple2<Tensor, IntTensor>(result, indices);
 	}
 
