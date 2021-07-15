@@ -64,16 +64,10 @@ __kernel void run(
 			for (int kernelWidthIndex = 0; kernelWidthIndex < kernelWidth; ++kernelWidthIndex) {
 				inputCoordinate[3] = inputCoordinate3Base + kernelWidthIndex * dilationW;
 				if (inputCoordinate[3] > -1 && inputCoordinate[3] < inputShape[3]) {
-					int inputGid = coordinateToGid(inputCoordinate, inputDimSizes);
-					float value = input[inputGid];
-					if (maxIndex != -1) {
-						if (value > maxValue) {
-							maxValue = value;
-							maxIndex = inputGid;
-						}
-					} else {
+					float value = input[coordinateToGid(inputCoordinate, inputDimSizes)];
+					if (-1 == maxIndex || value > maxValue) {
 						maxValue = value;
-						maxIndex = inputGid;
+						maxIndex = inputCoordinate[2] * inputDimSizes[2] + inputCoordinate[3];
 					}
 				}
 			}

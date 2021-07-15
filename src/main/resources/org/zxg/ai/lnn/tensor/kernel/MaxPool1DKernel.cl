@@ -53,12 +53,7 @@ __kernel void run(
 		inputCoordinate[2] = inputCoordinate2Base + kernelWidthIndex * dilation;
 		if (inputCoordinate[2] > -1 && inputCoordinate[2] < inputShape[2]) {
 			float value = input[coordinateToGid(inputCoordinate, inputDimSizes)];
-			if (maxIndex != -1) {
-				if (value > maxValue) {
-					maxValue = value;
-					maxIndex = inputCoordinate[2];
-				}
-			} else {
+			if (-1 == maxIndex || value > maxValue) {
 				maxValue = value;
 				maxIndex = inputCoordinate[2];
 			}
